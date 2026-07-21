@@ -117,9 +117,12 @@
   .cal .case.b{background:var(--orange-fond);color:var(--orange)}
   .cal .case.c{background:var(--rouge-fond);color:var(--rouge)}
   .cal .case.vide{background:transparent}
-  .cal .case.choisi{outline:2px solid var(--accent);outline-offset:1px}
+  .cal .case.dans{box-shadow:inset 0 0 0 1.5px var(--accent)}
+  .cal .case.bout{outline:2px solid var(--accent);outline-offset:1px}
   .detail-jour{margin-top:13px;padding-top:13px;border-top:1px solid var(--bord);font-size:14px}
-  .detail-jour .titre{font-weight:700;margin-bottom:9px}
+  .detail-jour .titre{font-weight:700;margin-bottom:4px}
+  .detail-jour .consigne{font-size:11px;color:var(--tres-doux);margin-bottom:9px}
+  .detail-jour .verdict-p{font-size:19px;font-weight:800;letter-spacing:-.4px;margin:2px 0 10px}
 
   .ligne{display:flex;justify-content:space-between;align-items:baseline;
          padding:9px 0;border-bottom:1px solid var(--bord);font-size:14px;gap:10px}
@@ -138,6 +141,16 @@
   .kpi .lib{font-size:10px;color:var(--tres-doux);text-transform:uppercase;letter-spacing:.6px}
   .kpi .val{font-size:19px;font-weight:700;margin-top:3px;font-variant-numeric:tabular-nums}
   .note{font-size:11px;color:var(--tres-doux);margin-top:12px;line-height:1.5}
+
+  .camp-bloc{padding:14px 0;border-bottom:1px solid var(--bord)}
+  .camp-bloc:first-child{padding-top:0}
+  .camp-bloc:last-child{border-bottom:none;padding-bottom:0}
+  .camp-tete{display:flex;justify-content:space-between;align-items:baseline;
+             gap:10px;margin-bottom:11px}
+  .camp-tete .nom{font-size:14px;font-weight:700;overflow:hidden;
+                  text-overflow:ellipsis;white-space:nowrap}
+  .camp-tete .sp{font-size:13px;color:var(--doux);white-space:nowrap;
+                 font-variant-numeric:tabular-nums}
 
   .alerte-remb{background:var(--rouge-fond);border:1px solid #57262b;border-radius:13px;
                padding:13px 15px;margin-bottom:12px;font-size:14px;color:var(--rouge)}
@@ -211,14 +224,8 @@
   </section>
 
   <section>
-    <h2>Meta <span id="meta-camp"></span></h2>
-    <div class="grille2">
-      <div class="kpi"><div class="lib">ROAS Meta</div><div class="val" id="m-roas"></div></div>
-      <div class="kpi"><div class="lib">CPA</div><div class="val" id="m-cpa"></div></div>
-      <div class="kpi"><div class="lib">CPC</div><div class="val" id="m-cpc"></div></div>
-      <div class="kpi"><div class="lib">CPM</div><div class="val" id="m-cpm"></div></div>
-    </div>
-    <div class="note" id="meta-note"></div>
+    <h2>Meta <span>campagnes actives</span></h2>
+    <div id="meta"></div>
   </section>
 
   <section>
@@ -227,10 +234,8 @@
   </section>
 
   <section>
-    <h2>Pays <span>seuil de rentabilité</span></h2>
+    <h2>Pays <span>par chiffre d'affaires</span></h2>
     <div id="pays"></div>
-    <div class="note">Le seuil diffère d'un pays à l'autre à cause des frais de paiement.
-      Le ROAS par pays n'est pas calculable : la dépense publicitaire n'est pas ventilée par pays.</div>
   </section>
 
   <section>
@@ -284,7 +289,7 @@ const JSEM = ["L", "M", "M", "J", "V", "S", "D"];
 const MOIS = ["janvier", "février", "mars", "avril", "mai", "juin", "juillet",
               "août", "septembre", "octobre", "novembre", "décembre"];
 
-let D = null, PERIODE = 7, JOUR_CHOISI = null, CAL_AN = null, CAL_MOIS = null;
+let D = null, PERIODE = 7, SEL_A = null, SEL_B = null, CAL_AN = null, CAL_MOIS = null;
 
 const PERIODES = [
   { l: "Auj.", j: 1 }, { l: "3 j", j: 3 }, { l: "7 j", j: 7 },
@@ -402,6 +407,7 @@ function rendreCalendrier() {
   const decalage = (new Date(CAL_AN, CAL_MOIS, 1).getDay() + 6) % 7;
   const nb = new Date(CAL_AN, CAL_MOIS + 1, 0).getDate();
 
+  const [deb, fin] = bornes();
   let h = JSEM.map(j => `<div class="jsem">${j}</div>`).join("");
   for (let i = 0; i < decalage; i++) h += `<div class="case vide"></div>`;
   for (let d = 1; d <= nb; d++) {
@@ -411,26 +417,55 @@ function rendreCalendrier() {
     if (j && (j.ca || (D.spend || {})[iso])) {
       cl = { ok: "a", moyen: "b", non: "c" }[classe(agreger([iso]))];
     }
-    h += `<div class="case ${cl}${iso === JOUR_CHOISI ? " choisi" : ""}" data-d="${iso}">${d}</div>`;
+    if (deb && iso >= deb && iso <= fin) cl += " dans";
+    if (iso === SEL_A || iso === SEL_B) cl += " bout";
+    h += `<div class="case ${cl}" data-d="${iso}">${d}</div>`;
   }
   const cal = $("#cal");
   cal.innerHTML = h;
   cal.querySelectorAll(".case[data-d]").forEach(el => {
-    el.onclick = () => { JOUR_CHOISI = el.dataset.d; rendreCalendrier(); };
+    el.onclick = () => { choisir(el.dataset.d); rendreCalendrier(); };
   });
+  rendreSelection();
+}
 
+/* Premier appui = début. Deuxième = fin. Troisième = on recommence. */
+function choisir(iso) {
+  if (!SEL_A || SEL_B) { SEL_A = iso; SEL_B = null; }
+  else if (iso < SEL_A) { SEL_B = SEL_A; SEL_A = iso; }
+  else { SEL_B = iso; }
+}
+
+const bornes = () => SEL_A ? [SEL_A, SEL_B || SEL_A] : [null, null];
+
+function rendreSelection() {
   const dj = $("#detail-jour");
-  if (!JOUR_CHOISI || !(D.jours || {})[JOUR_CHOISI]) {
-    dj.innerHTML = `<div class="detail-jour"><span class="vide-msg">Touche un jour pour voir son détail.</span></div>`;
+  const [deb, fin] = bornes();
+  if (!deb) {
+    dj.innerHTML = `<div class="detail-jour"><span class="vide-msg">
+      Touche un jour, puis un second, pour calculer une période.</span></div>`;
     return;
   }
-  const a = agreger([JOUR_CHOISI]);
-  const dd = new Date(JOUR_CHOISI + "T12:00:00");
+  const dates = toutesLesDates().filter(d => d >= deb && d <= fin);
+  if (!dates.length) {
+    dj.innerHTML = `<div class="detail-jour"><span class="vide-msg">
+      Aucune donnée sur cette période.</span></div>`;
+    return;
+  }
+  const a = agreger(dates);
   const c = classe(a);
   const coul = c === "ok" ? "var(--vert)" : c === "moyen" ? "var(--orange)" : "var(--rouge)";
+  const fdate = s => { const d = new Date(s + "T12:00:00");
+                       return `${d.getDate()} ${MOIS[d.getMonth()]}`; };
+  const titre = deb === fin ? fdate(deb) : `Du ${fdate(deb)} au ${fdate(fin)}`;
+
   dj.innerHTML = `<div class="detail-jour">
-    <div class="titre">${dd.getDate()} ${MOIS[dd.getMonth()]}
-      — <span style="color:${coul}">${c === "ok" ? "rentable" : c === "moyen" ? "limite" : "en perte"}</span></div>
+    <div class="titre">${titre}</div>
+    <div class="consigne">${dates.length} jour${dates.length > 1 ? "s" : ""}${
+      SEL_B ? "" : " — touche un second jour pour étendre"}</div>
+    <div class="verdict-p" style="color:${coul}">${
+      c === "ok" ? "RENTABLE" : c === "moyen" ? "JUSTE À L'ÉQUILIBRE" : "PAS RENTABLE"
+    } · ${eur2(a.profit)}</div>
     ${lig("Chiffre d'affaires", eur2(a.ca))}
     ${lig("Commandes", String(a.n))}
     ${lig("Dépensé en pub", eur2(a.spend))}
@@ -438,29 +473,45 @@ function rendreCalendrier() {
     ${lig("Frais de paiement", eur2(a.frais))}
     ${a.fixes ? lig("Abonnements prélevés", eur2(a.fixes)) : ""}
     ${a.remb ? lig("Remboursements", eur2(a.remb)) : ""}
-    ${lig("<b>Profit</b>", `<b style="color:${coul}">${eur2(a.profit)}</b>`)}
+    ${lig("Marge", pct(a.marge))}
+    ${lig("ROAS", a.roas ? `${num(a.roas)} <small style="color:var(--doux)">seuil ${num(a.be)}</small>` : "—")}
   </div>`;
 }
 
 const lig = (g, d) =>
   `<div class="ligne"><div class="nom"><div class="t">${g}</div></div><div class="chiffres">${d}</div></div>`;
 
-function campagnes(dates) {
-  const s = new Set();
-  for (const d of dates) for (const ad of ((D.ads || {})[d] || [])) if (ad.camp) s.add(ad.camp);
-  return [...s];
-}
-
+/* Un bloc de chiffres par campagne : le jour où il y en aura plusieurs,
+   on saura tout de suite à laquelle chaque résultat appartient. */
 function rendreMeta(a, dates) {
-  $("#m-roas").textContent = a.spend ? num(a.va / a.spend) : "—";
-  $("#m-cpa").textContent = a.cv ? eur2(a.spend / a.cv) : "—";
-  $("#m-cpc").textContent = a.cl ? eur2(a.spend / a.cl) : "—";
-  $("#m-cpm").textContent = a.im ? eur2((a.spend / a.im) * 1000) : "—";
-  const c = campagnes(dates);
-  $("#meta-camp").textContent = c.length === 1 ? c[0] : c.length ? `${c.length} campagnes` : "";
-  $("#meta-note").innerHTML = c.length
-    ? `Campagnes actives uniquement : <b style="color:var(--doux)">${c.map(echap).join(" · ")}</b>. Les campagnes en pause sont exclues.`
-    : "Aucune campagne active sur la période.";
+  const par = {};
+  for (const d of dates) for (const ad of ((D.ads || {})[d] || [])) {
+    const c = ad.camp || "Campagne";
+    par[c] = par[c] || { sp: 0, im: 0, cl: 0, cv: 0, va: 0 };
+    for (const k of ["sp", "im", "cl", "cv", "va"]) par[c][k] += ad[k] || 0;
+  }
+  const liste = Object.entries(par).sort((x, y) => y[1].sp - x[1].sp);
+  if (!liste.length) {
+    $("#meta").innerHTML = `<div class="vide-msg">Pas encore de données par campagne.</div>`;
+    return;
+  }
+  $("#meta").innerHTML = liste.map(([nom, v]) => `
+    <div class="camp-bloc">
+      <div class="camp-tete">
+        <div class="nom">${echap(nom)}</div>
+        <div class="sp">${eur2(v.sp)}</div>
+      </div>
+      <div class="grille2">
+        <div class="kpi"><div class="lib">ROAS</div>
+          <div class="val">${v.sp ? num(v.va / v.sp) : "—"}</div></div>
+        <div class="kpi"><div class="lib">CPA</div>
+          <div class="val">${v.cv ? eur2(v.sp / v.cv) : "—"}</div></div>
+        <div class="kpi"><div class="lib">CPC</div>
+          <div class="val">${v.cl ? eur2(v.sp / v.cl) : "—"}</div></div>
+        <div class="kpi"><div class="lib">CPM</div>
+          <div class="val">${v.im ? eur2(v.sp / v.im * 1000) : "—"}</div></div>
+      </div>
+    </div>`).join("");
 }
 
 function rendreAds(dates) {
@@ -493,17 +544,13 @@ function rendrePays(dates) {
   }
   const total = agreger(dates);
   const liste = Object.entries(par).sort((a, b) => b[1].ca - a[1].ca);
-  $("#pays").innerHTML = liste.length ? liste.map(([p, v]) => {
-    const reste = v.ca - v.cogs - v.frais;
-    const seuil = reste > 0 ? v.ca / reste : 0;
-    return `<div class="ligne">
+  $("#pays").innerHTML = liste.length ? liste.map(([p, v]) => `
+    <div class="ligne">
       <div class="nom"><div class="t">${drapeau(p)} ${p}</div>
-        <small>${v.n} commande${v.n > 1 ? "s" : ""} · panier ${v.n ? eur2(v.ca / v.n) : "—"}</small>
-        <small class="camp">${seuil ? "seuil de rentabilité " + num(seuil) : ""}</small></div>
+        <small>${v.n} commande${v.n > 1 ? "s" : ""} · panier ${v.n ? eur2(v.ca / v.n) : "—"}</small></div>
       <div class="chiffres"><b>${eur2(v.ca)}</b>
         <small>${total.ca ? Math.round(v.ca / total.ca * 100) : 0} % du CA</small></div>
-    </div>`;
-  }).join("") : `<div class="vide-msg">Aucune vente sur la période.</div>`;
+    </div>`).join("") : `<div class="vide-msg">Aucune vente sur la période.</div>`;
 }
 
 function rendreDetail(a) {
@@ -573,7 +620,7 @@ async function entrer(jeton, mdp, silencieux) {
     localStorage.setItem("m", mdp);
     $("#connexion").classList.add("cache");
     $("#tableau").classList.remove("cache");
-    JOUR_CHOISI = null; CAL_AN = null; CAL_MOIS = null;
+    SEL_A = null; SEL_B = null; CAL_AN = null; CAL_MOIS = null;
     construirePeriodes(); rendreMaj(); rendre();
   } catch (e) {
     err.textContent = /operation-specific|OperationError|decrypt/i.test(String(e))
