@@ -306,7 +306,27 @@ const PERIODES = [
   { l: "14 j", j: 14 }, { l: "1 mois", j: 30 }
 ];
 
-const toutesLesDates = () => Object.keys(D.jours || {}).sort();
+/* Série de dates CONTINUE, jusqu'à aujourd'hui heure de Houston.
+   Un jour sans vente reste un jour : sans ça, « aujourd'hui » désignerait
+   le dernier jour qui a vendu — donc hier, ou avant-hier. */
+function toutesLesDates() {
+  const connues = [...new Set([...Object.keys(D.jours || {}),
+                               ...Object.keys(D.spend || {})])].sort();
+  if (!connues.length) return [];
+  const auj = new Date().toLocaleDateString("en-CA", { timeZone: "America/Chicago" });
+  const derniere = connues[connues.length - 1];
+  const fin = auj > derniere ? auj : derniere;
+  const out = [];
+  const d = new Date(connues[0] + "T12:00:00");
+  for (let garde = 0; garde < 4000; garde++) {
+    const iso = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`
+              + `-${String(d.getDate()).padStart(2, "0")}`;
+    out.push(iso);
+    if (iso >= fin) break;
+    d.setDate(d.getDate() + 1);
+  }
+  return out;
+}
 
 function fenetre(nbJours, decalage = 0) {
   const t = toutesLesDates();
@@ -422,9 +442,12 @@ function rendreCalendrier() {
   for (let i = 0; i < decalage; i++) h += `<div class="case vide"></div>`;
   for (let d = 1; d <= nb; d++) {
     const iso = `${CAL_AN}-${String(CAL_MOIS + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
-    const j = (D.jours || {})[iso];
+    // Un jour où l'on a dépensé sans vendre est un jour en perte :
+    // il doit se colorer en rouge, pas rester gris comme un jour vide.
+    const j = (D.jours || {})[iso] || {};
+    const actif = (j.ca || 0) + (j.n || 0) + ((D.spend || {})[iso] || 0);
     let cl = "";
-    if (j && (j.ca || (D.spend || {})[iso])) {
+    if (actif > 0) {
       cl = { ok: "a", moyen: "b", non: "c" }[classe(agreger([iso]))];
     }
     if (deb && iso >= deb && iso <= fin) cl += " dans";
