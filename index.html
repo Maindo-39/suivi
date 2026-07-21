@@ -156,7 +156,7 @@
 
   <label for="jeton">Jeton d'accès</label>
   <input id="jeton" type="password" autocomplete="off" autocapitalize="off"
-         autocorrect="off" spellcheck="false" placeholder="github_pat_…">
+         autocorrect="off" spellcheck="false" placeholder="ton jeton d'accès">
   <p class="aide">Créé une fois sur GitHub, en lecture seule. Il donne le droit de récupérer le fichier — pas de le lire.</p>
 
   <label for="mdp">Mot de passe</label>
@@ -436,7 +436,7 @@ function rendreCalendrier() {
     ${lig("Commandes", String(a.n))}
     ${lig("Dépensé en pub", eur2(a.spend))}
     ${lig("Coût des produits", eur2(a.cogs))}
-    ${lig("Frais Shopify", eur2(a.frais))}
+    ${lig("Frais de paiement", eur2(a.frais))}
     ${a.fixes ? lig("Abonnements prélevés", eur2(a.fixes)) : ""}
     ${a.remb ? lig("Remboursements", eur2(a.remb)) : ""}
     ${lig("<b>Profit</b>", `<b style="color:${coul}">${eur2(a.profit)}</b>`)}
@@ -492,7 +492,7 @@ function rendreDetail(a) {
     lig("Commandes", String(a.n)) +
     lig("Panier moyen", a.n ? eur2(a.ca / a.n) : "—") +
     lig("Coût des produits", eur2(a.cogs)) +
-    lig("Frais Shopify", eur2(a.frais) + ` <small style="color:var(--doux)">(${a.ca ? pct(a.frais / a.ca) : "—"})</small>`) +
+    lig("Frais de paiement", eur2(a.frais) + ` <small style="color:var(--doux)">(${a.ca ? pct(a.frais / a.ca) : "—"})</small>`) +
     (a.fixes ? lig("Abonnements", eur2(a.fixes)) : "") +
     lig("Remboursements", a.remb ? `<span style="color:var(--rouge)">${eur2(a.remb)}</span>` : "aucun") +
     lig("<b>Total des coûts</b>", `<b>${eur2(a.couts)}</b>`);
