@@ -1,0 +1,26 @@
+# EXPÉRIENCE — dépôt PUBLIC.
+# Le déclencheur « push » le fait tourner dès maintenant : plus besoin
+# d'un clic pour prouver qu'il fonctionne. Ensuite, toute ligne marquée
+# « schedule » prouvera que le planificateur marche sur un dépôt public.
+name: Horloge
+
+on:
+  schedule:
+    - cron: '*/5 * * * *'
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          echo "$(date -u '+%H:%M UTC') — ${{ github.event_name }}" >> horloge.txt
+          git config user.name  "horloge"
+          git config user.email "horloge@users.noreply.github.com"
+          git add horloge.txt && git commit -m "horloge" && git push
