@@ -1,0 +1,14 @@
+{
+  "name": "Suivi",
+  "short_name": "Suivi",
+  "description": "Tableau de bord privé",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0d0c14",
+  "theme_color": "#12111c",
+  "icons": [
+    { "src": "icone.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
