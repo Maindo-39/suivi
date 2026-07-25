@@ -29,7 +29,9 @@
   }
   .cache{display:none!important}
 
-  #connexion{padding-top:14vh}
+  #connexion{padding-top:11vh}
+  .marque{display:flex;justify-content:center;margin-bottom:22px}
+  .globe{width:96px;height:auto;color:var(--texte)}
   #connexion h1{font-size:26px;font-weight:700;letter-spacing:-.5px;margin-bottom:6px}
   #connexion p.intro{color:var(--doux);font-size:14px;margin-bottom:26px}
   label{display:block;font-size:12px;font-weight:600;color:var(--doux);
@@ -172,6 +174,22 @@
 <body>
 
 <div id="connexion">
+  <div class="marque">
+    <svg class="globe" viewBox="0 0 200 100" aria-hidden="true">
+      <g fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round">
+        <ellipse cx="100" cy="50" rx="94" ry="46"/>
+        <ellipse cx="100" cy="50" rx="20" ry="46"/>
+        <ellipse cx="100" cy="50" rx="45" ry="46"/>
+        <ellipse cx="100" cy="50" rx="70" ry="46"/>
+        <line x1="100" y1="4" x2="100" y2="96"/>
+        <line x1="28.74" y1="20" x2="171.26" y2="20"/>
+        <line x1="11.14" y1="35" x2="188.86" y2="35"/>
+        <line x1="6" y1="50" x2="194" y2="50"/>
+        <line x1="11.14" y1="65" x2="188.86" y2="65"/>
+        <line x1="28.74" y1="80" x2="171.26" y2="80"/>
+      </g>
+    </svg>
+  </div>
   <h1>Suivi</h1>
   <p class="intro">Deux clés sont nécessaires : le jeton d'accès et ton mot de passe.</p>
 
@@ -246,6 +264,11 @@
   <section>
     <h2>Pays <span>par chiffre d'affaires</span></h2>
     <div id="pays"></div>
+  </section>
+
+  <section>
+    <h2>Produits <span>paires vendues</span></h2>
+    <div id="produits"></div>
   </section>
 
   <section>
@@ -395,6 +418,7 @@ function rendre() {
   rendreMeta(a, dates);
   rendreAds(dates);
   rendrePays(dates);
+  rendreProduits(dates);
   rendreDetail(a);
   rendreRemb(dates);
 }
@@ -583,6 +607,25 @@ function rendrePays(dates) {
         <small>${v.n} commande${v.n > 1 ? "s" : ""} · panier ${v.n ? eur2(v.ca / v.n) : "—"}</small></div>
       <div class="chiffres"><b>${eur2(v.ca)}</b>
         <small>${total.ca ? Math.round(v.ca / total.ca * 100) : 0} % du CA</small></div>
+    </div>`).join("") : `<div class="vide-msg">Aucune vente sur la période.</div>`;
+}
+
+function rendreProduits(dates) {
+  const par = {};
+  for (const d of dates) {
+    for (const [nom, v] of Object.entries((D.produits || {})[d] || {})) {
+      par[nom] = par[nom] || { u: 0, ca: 0 };
+      par[nom].u += v.u || 0; par[nom].ca += v.ca || 0;
+    }
+  }
+  const liste = Object.entries(par).sort((a, b) => b[1].u - a[1].u);
+  const total = liste.reduce((s, [, v]) => s + v.u, 0);
+  $("#produits").innerHTML = liste.length ? liste.map(([nom, v]) => `
+    <div class="ligne">
+      <div class="nom"><div class="t">${echap(nom)}</div>
+        <small>${total ? Math.round(v.u / total * 100) : 0} % des paires</small></div>
+      <div class="chiffres"><b>${v.u}</b>
+        <small>${eur2(v.ca)}</small></div>
     </div>`).join("") : `<div class="vide-msg">Aucune vente sur la période.</div>`;
 }
 
