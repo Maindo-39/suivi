@@ -303,13 +303,15 @@ async function dechiffrer(blob, mdp) {
 }
 
 async function telecharger(jeton) {
-  const r = await fetch(`https://api.github.com/repos/${DEPOT}/contents/${CHEMIN}`, {
-    headers: { Authorization: "Bearer " + jeton, Accept: "application/vnd.github.raw" },
+  // Lit le robot Cloudflare (mise à jour à la minute). Le déchiffrement, lui,
+  // n'a pas changé : c'est toujours ton mot de passe, dans ton navigateur.
+  const r = await fetch("https://collecteur.relais-brume-90312.workers.dev/", {
+    headers: { "x-jeton": jeton },
     cache: "no-store"
   });
-  if (r.status === 401) throw new Error("Jeton refusé. Il a peut-être expiré.");
-  if (r.status === 404) throw new Error("Jeton sans accès à ce dépôt, ou fichier absent.");
-  if (!r.ok) throw new Error("GitHub a répondu " + r.status + ".");
+  if (r.status === 403) throw new Error("Jeton refusé.");
+  if (r.status === 404) throw new Error("Données pas encore prêtes.");
+  if (!r.ok) throw new Error("Le robot a répondu " + r.status + ".");
   return r.arrayBuffer();
 }
 
@@ -658,14 +660,11 @@ function drapeau(p) {
 
 function rendreMaj() {
   if (!D?.maj) return;
-  const t = new Date(D.maj);
-  const h = (Date.now() - t.getTime()) / 3600000;
+  const min = (Date.now() - new Date(D.maj).getTime()) / 60000;
+  const aJour = min <= 5;                 // le robot écrit chaque minute
   const el = $("#maj");
-  el.className = "maj" + (h > 3 ? " vieux" : "");
-  const heure = t.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
-  const memeJour = t.toDateString() === new Date().toDateString();
-  const jour = memeJour ? "" : ` ${t.getDate()} ${MOIS[t.getMonth()]}`;
-  el.innerHTML = `<span class="pastille"></span>Mis à jour <b>${heure}${jour}</b>`;
+  el.className = "maj" + (aJour ? "" : " vieux");
+  el.innerHTML = `<span class="pastille"></span><b>${aJour ? "à jour" : "pas à jour"}</b>`;
 }
 
 function construirePeriodes() {
@@ -755,6 +754,14 @@ $("#btn-oublier").onclick = () => {
   const j = localStorage.getItem("j"), m = localStorage.getItem("m");
   if (j && m) { $("#jeton").value = j; $("#mdp").value = m; entrer(j, m, true); }
 })();
+
+// Rafraîchit tout seul chaque minute tant que l'app est ouverte et visible :
+// la pastille reste le reflet en direct de l'état du robot, et les chiffres suivent.
+setInterval(() => {
+  if (document.visibilityState !== "visible") return;
+  const j = localStorage.getItem("j"), m = localStorage.getItem("m");
+  if (j && m) entrer(j, m, true);
+}, 60000);
 
 if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
 </script>
