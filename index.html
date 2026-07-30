@@ -303,15 +303,16 @@ async function dechiffrer(blob, mdp) {
 }
 
 async function telecharger(jeton) {
-  // Lit le robot Cloudflare (mise à jour à la minute). Le déchiffrement, lui,
-  // n'a pas changé : c'est toujours ton mot de passe, dans ton navigateur.
-  const r = await fetch("https://collecteur.relais-brume-90312.workers.dev/", {
-    headers: { "x-jeton": jeton },
+  // Lecture directe de GitHub (fiable, mis à jour chaque heure). Retour à
+  // l'architecture d'avant le 29/07 : le robot Cloudflare s'était bloqué.
+  // Le déchiffrement se fait ici avec ton mot de passe, dans ton navigateur.
+  const r = await fetch(`https://api.github.com/repos/${DEPOT}/contents/${CHEMIN}`, {
+    headers: { Authorization: "Bearer " + jeton, Accept: "application/vnd.github.raw" },
     cache: "no-store"
   });
-  if (r.status === 403) throw new Error("Jeton refusé.");
-  if (r.status === 404) throw new Error("Données pas encore prêtes.");
-  if (!r.ok) throw new Error("Le robot a répondu " + r.status + ".");
+  if (r.status === 401) throw new Error("Jeton refusé. Il a peut-être expiré.");
+  if (r.status === 404) throw new Error("Jeton sans accès au dépôt, ou fichier absent.");
+  if (!r.ok) throw new Error("GitHub a répondu " + r.status + ".");
   return r.arrayBuffer();
 }
 
@@ -662,8 +663,8 @@ function rendreMaj() {
   if (!D?.maj) return;
   const t = new Date(D.maj);
   const min = (Date.now() - t.getTime()) / 60000;
-  // Le robot Cloudflare met à jour chaque minute ; 5 min de tolérance.
-  const aJour = min <= 5;
+  // GitHub se met à jour chaque heure ; 90 min de tolérance avant d'alerter.
+  const aJour = min <= 90;
   const el = $("#maj");
   el.className = "maj" + (aJour ? "" : " vieux");
   const heure = t.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
