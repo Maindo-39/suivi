@@ -660,11 +660,16 @@ function drapeau(p) {
 
 function rendreMaj() {
   if (!D?.maj) return;
-  const min = (Date.now() - new Date(D.maj).getTime()) / 60000;
-  const aJour = min <= 5;                 // le robot écrit chaque minute
+  const t = new Date(D.maj);
+  const min = (Date.now() - t.getTime()) / 60000;
+  // Les chiffres se rafraîchissent toutes les heures (Shopify → GitHub, à la
+  // minute 22). On tolère jusqu'à 90 min avant d'alerter : au-delà, un passage
+  // a vraiment sauté.
+  const aJour = min <= 90;
   const el = $("#maj");
   el.className = "maj" + (aJour ? "" : " vieux");
-  el.innerHTML = `<span class="pastille"></span><b>${aJour ? "à jour" : "pas à jour"}</b>`;
+  const heure = t.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
+  el.innerHTML = `<span class="pastille"></span>Mis à jour <b>${heure}</b>`;
 }
 
 function construirePeriodes() {
