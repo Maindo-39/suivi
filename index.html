@@ -662,10 +662,8 @@ function rendreMaj() {
   if (!D?.maj) return;
   const t = new Date(D.maj);
   const min = (Date.now() - t.getTime()) / 60000;
-  // Les chiffres se rafraîchissent toutes les heures (Shopify → GitHub, à la
-  // minute 22). On tolère jusqu'à 90 min avant d'alerter : au-delà, un passage
-  // a vraiment sauté.
-  const aJour = min <= 90;
+  // Le robot Cloudflare met à jour chaque minute ; 5 min de tolérance.
+  const aJour = min <= 5;
   const el = $("#maj");
   el.className = "maj" + (aJour ? "" : " vieux");
   const heure = t.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
