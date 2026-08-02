@@ -418,11 +418,13 @@ function agreger(dates) {
       a.im += ad.im || 0; a.cl += ad.cl || 0; a.cv += ad.cv || 0; a.va += ad.va || 0;
     }
   }
-  a.couts = a.spend + a.cogs + a.frais + a.remb + a.fixes;
-  a.profit = a.ca - a.couts;
-  a.marge = a.ca ? a.profit / a.ca : 0;
-  a.roas = a.spend ? a.ca / a.spend : 0;
   const variable = a.cogs + a.frais + a.remb;
+  a.contribution = a.ca - a.spend - variable;   // profit de contribution (SANS abonnements) — le signal de scale
+  a.profit = a.contribution;                     // "profit" = contribution : verdict, couleurs du calendrier, graphe
+  a.net = a.contribution - a.fixes;              // profit net = vrai bénéf (abonnements déduits)
+  a.couts = a.spend + variable + a.fixes;        // total des coûts (abonnements compris)
+  a.marge = a.ca ? a.contribution / a.ca : 0;    // marge de contribution
+  a.roas = a.spend ? a.ca / a.spend : 0;
   a.be = a.ca - variable > 0 ? a.ca / (a.ca - variable) : 0;
   return a;
 }
@@ -443,8 +445,8 @@ function rendre() {
   $("#verdict").textContent = c === "ok" ? "RENTABLE"
     : c === "moyen" ? "JUSTE À L'ÉQUILIBRE" : "PAS RENTABLE";
   $("#profit").textContent = eur(a.profit);
-  $("#sous-profit").textContent =
-    `marge ${pct(a.marge)} · ${a.n} commande${a.n > 1 ? "s" : ""} · ${dates.length} jour${dates.length > 1 ? "s" : ""}`;
+  $("#sous-profit").innerHTML =
+    `net <b style="color:var(--texte)">${eur(a.net)}</b> <small style="color:var(--doux)">après abonnements</small> · marge ${pct(a.marge)} · ${a.n} cmd`;
 
   const delta = (v, ref) => {
     if (!ref) return "";
@@ -579,7 +581,7 @@ function rendreSelection() {
     ${lig("Dépensé en pub", eur2(a.spend))}
     ${lig("Coût des produits", eur2(a.cogs))}
     ${lig("Frais de paiement", eur2(a.frais))}
-    ${(() => { const abos = dates.flatMap(abosDuJour); return abos.length ? lig("Abonnements prélevés", `${eur2(a.fixes)} <small style="color:var(--doux)">(${abos.map(x => x.nom).join(", ")})</small>`) : ""; })()}
+    ${(() => { const abos = dates.flatMap(abosDuJour); return abos.length ? lig("Abonnements prélevés", `${eur2(a.fixes)} <small style="color:var(--doux)">(${abos.map(x => x.nom).join(", ")})</small>`) + lig("<b>= Profit net</b>", `<b>${eur2(a.net)}</b>`) : ""; })()}
     ${a.remb ? lig("Remboursements", eur2(a.remb)) : ""}
     ${lig("Marge", pct(a.marge))}
     ${lig("ROAS", a.roas ? `${num(a.roas)} <small style="color:var(--doux)">seuil ${num(a.be)}</small>` : "—")}
