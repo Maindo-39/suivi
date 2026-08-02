@@ -755,7 +755,15 @@ $("#btn-oublier").onclick = () => {
 
 (function () {
   const j = localStorage.getItem("j"), m = localStorage.getItem("m");
-  if (j && m) { $("#jeton").value = j; $("#mdp").value = m; entrer(j, m, true); }
+  if (j && m) {
+    // Déjà connecté : on saute l'écran de connexion (fini le flash de tes codes).
+    // On ne remplit PAS les champs visibles ; juste un "Déchiffrement…" discret
+    // le temps que ton mot de passe déverrouille les données, puis le tableau.
+    $("#connexion").classList.add("cache");
+    document.body.insertAdjacentHTML("beforeend",
+      '<div id="splash" style="position:fixed;inset:0;display:grid;place-items:center;color:#8a8f98;font:14px system-ui,-apple-system,sans-serif">Déchiffrement…</div>');
+    entrer(j, m, true).finally(() => { const s = document.getElementById("splash"); if (s) s.remove(); });
+  }
 })();
 
 // Rafraîchit tout seul chaque minute tant que l'app est ouverte et visible :
