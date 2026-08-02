@@ -131,6 +131,8 @@
   .cal .case.vide{background:transparent}
   .cal .case.dans{box-shadow:inset 0 0 0 1.5px var(--accent)}
   .cal .case.bout{outline:2px solid var(--accent);outline-offset:1px}
+  .cal .case{position:relative}
+  .cal .case .abo-dot{position:absolute;top:4px;right:4px;width:6px;height:6px;border-radius:50%;background:var(--orange)}
   .detail-jour{margin-top:13px;padding-top:13px;border-top:1px solid var(--bord);font-size:14px}
   .detail-jour .titre{font-weight:700;margin-bottom:4px}
   .detail-jour .consigne{font-size:11px;color:var(--tres-doux);margin-bottom:9px}
@@ -276,6 +278,11 @@
     <div id="detail"></div>
   </section>
 
+  <section>
+    <h2>Abonnements <span>coûts fixes</span></h2>
+    <div id="abos"></div>
+  </section>
+
   <footer>
     Déchiffré sur cet appareil. Rien n'est envoyé nulle part.<br>
     <button id="btn-oublier">Effacer mes accès de ce téléphone</button>
@@ -359,13 +366,36 @@ function fenetre(nbJours, decalage = 0) {
   return t.slice(Math.max(0, fin - nbJours), Math.max(0, fin));
 }
 
+// ── Abonnements (coûts fixes) — calculés ICI, dans l'app. Changer une valeur = instantané. ──
+const DEBUT_FIXES = "2026-08-01";
+const ABOS = [
+  { nom: "TrendTrack",   jour: 2,  montant: 89 },
+  { nom: "Claude",       jour: 23, montant: 200 },
+  { nom: "Higgsfield",   jour: 21, montant: 250 },
+  { nom: "Canva",        jour: 21, montant: 13 },
+  { nom: "ChatGPT",      jour: 28, montant: 25 },
+  { nom: "Triple Whale", jour: 29, montant: 220 },
+];
+const ABOS_HEBDO = [ { nom: "Salaire VA", jsem: 1, montant: 98 } ]; // 1 = lundi (getUTCDay)
+function abosDuJour(iso) {
+  if (iso < DEBUT_FIXES) return [];
+  const dd = new Date(iso + "T12:00:00Z");
+  const jm = dd.getUTCDate(), js = dd.getUTCDay();
+  const out = [];
+  for (const a of ABOS) if (a.jour === jm) out.push(a);
+  for (const a of ABOS_HEBDO) if (a.jsem === js) out.push(a);
+  return out;
+}
+function fixesJour(iso) { return abosDuJour(iso).reduce((s, a) => s + a.montant, 0); }
+
 function agreger(dates) {
   const a = { ca: 0, n: 0, spend: 0, cogs: 0, frais: 0, remb: 0, fixes: 0,
               im: 0, cl: 0, cv: 0, va: 0 };
   for (const d of dates) {
     const j = (D.jours || {})[d];
     if (j) { a.ca += j.ca || 0; a.n += j.n || 0; a.cogs += j.cogs || 0;
-             a.frais += j.frais || 0; a.remb += j.remb || 0; a.fixes += j.fixes || 0; }
+             a.frais += j.frais || 0; a.remb += j.remb || 0; }
+    a.fixes += fixesJour(d);   // coûts fixes calculés dans l'app (pas ceux du robot)
     a.spend += (D.spend || {})[d] || 0;
     for (const ad of ((D.ads || {})[d] || [])) {
       a.im += ad.im || 0; a.cl += ad.cl || 0; a.cv += ad.cv || 0; a.va += ad.va || 0;
@@ -422,6 +452,7 @@ function rendre() {
   rendrePays(dates);
   rendreProduits(dates);
   rendreDetail(a);
+  rendreAbos();
   rendreRemb(dates);
 }
 
@@ -478,7 +509,8 @@ function rendreCalendrier() {
     }
     if (deb && iso >= deb && iso <= fin) cl += " dans";
     if (iso === SEL_A || iso === SEL_B) cl += " bout";
-    h += `<div class="case ${cl}" data-d="${iso}">${d}</div>`;
+    const abo = abosDuJour(iso).length ? '<span class="abo-dot"></span>' : "";
+    h += `<div class="case ${cl}" data-d="${iso}">${d}${abo}</div>`;
   }
   const cal = $("#cal");
   cal.innerHTML = h;
@@ -530,7 +562,7 @@ function rendreSelection() {
     ${lig("Dépensé en pub", eur2(a.spend))}
     ${lig("Coût des produits", eur2(a.cogs))}
     ${lig("Frais de paiement", eur2(a.frais))}
-    ${a.fixes ? lig("Abonnements prélevés", eur2(a.fixes)) : ""}
+    ${(() => { const abos = dates.flatMap(abosDuJour); return abos.length ? lig("Abonnements prélevés", `${eur2(a.fixes)} <small style="color:var(--doux)">(${abos.map(x => x.nom).join(", ")})</small>`) : ""; })()}
     ${a.remb ? lig("Remboursements", eur2(a.remb)) : ""}
     ${lig("Marge", pct(a.marge))}
     ${lig("ROAS", a.roas ? `${num(a.roas)} <small style="color:var(--doux)">seuil ${num(a.be)}</small>` : "—")}
@@ -640,6 +672,16 @@ function rendreDetail(a) {
     (a.fixes ? lig("Abonnements", eur2(a.fixes)) : "") +
     lig("Remboursements", a.remb ? `<span style="color:var(--rouge)">${eur2(a.remb)}</span>` : "aucun") +
     lig("<b>Total des coûts</b>", `<b>${eur2(a.couts)}</b>`);
+}
+
+function rendreAbos() {
+  const l = (nom, quand, montant) =>
+    `<div class="ligne"><div class="nom"><div class="t">${nom}</div><small>${quand}</small></div><div class="chiffres"><b>${eur2(montant)}</b></div></div>`;
+  const mens = [...ABOS].sort((x, y) => x.jour - y.jour).map(a => l(a.nom, "le " + a.jour + " du mois", a.montant)).join("");
+  const hebdo = ABOS_HEBDO.map(a => l(a.nom, "chaque lundi", a.montant)).join("");
+  const totMens = ABOS.reduce((s, a) => s + a.montant, 0);
+  $("#abos").innerHTML = mens + hebdo +
+    `<div class="ligne"><div class="nom"><div class="t"><b>Total mensuel</b></div></div><div class="chiffres"><b>${eur2(totMens)}</b></div></div>`;
 }
 
 function rendreRemb(dates) {
