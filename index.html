@@ -75,6 +75,14 @@
   .flash.mauvais{border-color:#57262b;color:var(--rouge)}
 
   .periodes{display:flex;gap:6px;margin-bottom:16px}
+  .onglets{display:flex;gap:6px;margin-bottom:14px}
+  .onglets button{flex:1;padding:9px;border:1px solid var(--bord);background:var(--carte);
+                  color:var(--doux);border-radius:10px;font-size:14px;font-weight:600}
+  .onglets button.actif{background:var(--carte2);color:var(--texte);border-color:var(--accent)}
+  .pages{display:flex;align-items:flex-start;overflow-x:auto;scroll-snap-type:x mandatory;
+         -webkit-overflow-scrolling:touch;scrollbar-width:none;margin:0 -2px}
+  .pages::-webkit-scrollbar{display:none}
+  .page{flex:0 0 100%;min-width:0;scroll-snap-align:start;padding:0 2px}
   .periodes button{
     flex:1;padding:9px 0;background:var(--carte);border:1px solid var(--bord);
     border-radius:10px;color:var(--doux);font-size:13px;font-weight:600;font-family:inherit;
@@ -216,6 +224,15 @@
   </header>
 
   <div class="periodes" id="periodes"></div>
+
+  <div class="onglets" id="onglets">
+    <button data-p="0" class="actif">Compta</button>
+    <button data-p="1">Ads</button>
+  </div>
+  <div class="pages" id="pages">
+    <div class="page" id="page-compta"></div>
+    <div class="page" id="page-ads"></div>
+  </div>
   <div id="alerte-remb"></div>
 
   <div class="hero" id="hero">
@@ -815,6 +832,23 @@ setInterval(() => {
   const j = localStorage.getItem("j"), m = localStorage.getItem("m");
   if (j && m) entrer(j, m, true);
 }, 60000);
+
+// Répartit les sections en 2 pages (Compta / Ads) qu'on fait défiler à l'horizontale.
+function organiserPages() {
+  const pc = $("#page-compta"), pa = $("#page-ads"), pages = $("#pages");
+  if (!pc || !pa) return;
+  const sec = id => { const e = $("#" + id); return e ? e.closest("section") : null; };
+  [$("#alerte-remb"), $("#hero"), document.querySelector(".tuiles"),
+   sec("graph"), sec("cal"), sec("detail"), sec("abos")].forEach(el => { if (el) pc.appendChild(el); });
+  [sec("meta"), sec("ads"), sec("pays"), sec("produits")].forEach(el => { if (el) pa.appendChild(el); });
+  const btns = $("#onglets").querySelectorAll("button");
+  btns.forEach(b => b.onclick = () => pages.scrollTo({ left: (+b.dataset.p) * pages.clientWidth, behavior: "smooth" }));
+  pages.addEventListener("scroll", () => {
+    const i = Math.round(pages.scrollLeft / (pages.clientWidth || 1));
+    btns.forEach((b, k) => b.classList.toggle("actif", k === i));
+  });
+}
+organiserPages();
 
 if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
 </script>
