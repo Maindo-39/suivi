@@ -144,7 +144,10 @@
   .detail-jour{margin-top:13px;padding-top:13px;border-top:1px solid var(--bord);font-size:14px}
   .detail-jour .titre{font-weight:700;margin-bottom:4px}
   .detail-jour .consigne{font-size:11px;color:var(--tres-doux);margin-bottom:9px}
-  .detail-jour .verdict-p{font-size:19px;font-weight:800;letter-spacing:-.4px;margin:2px 0 10px}
+  .detail-jour .verdict-p{font-size:19px;font-weight:800;letter-spacing:-.4px;margin:2px 0 5px}
+  .detail-jour .net-p{font-size:15px;font-weight:700;margin:0 0 12px}
+  .etoile{color:var(--orange);font-weight:700}
+  .note-etoile{font-size:10px;color:var(--tres-doux);margin-top:8px}
 
   .ligne{display:flex;justify-content:space-between;align-items:baseline;
          padding:9px 0;border-bottom:1px solid var(--bord);font-size:14px;gap:10px}
@@ -576,15 +579,17 @@ function rendreSelection() {
     <div class="verdict-p" style="color:${coul}">${
       c === "ok" ? "RENTABLE" : c === "moyen" ? "JUSTE À L'ÉQUILIBRE" : "PAS RENTABLE"
     } · ${eur2(a.profit)}</div>
+    ${a.fixes ? `<div class="net-p" style="color:${a.net >= 0 ? "var(--vert)" : "var(--rouge)"}">Profit net · ${eur2(a.net)} <span class="etoile">*</span></div>` : ""}
     ${lig("Chiffre d'affaires", eur2(a.ca))}
     ${lig("Commandes", String(a.n))}
     ${lig("Dépensé en pub", eur2(a.spend))}
     ${lig("Coût des produits", eur2(a.cogs))}
     ${lig("Frais de paiement", eur2(a.frais))}
-    ${(() => { const abos = dates.flatMap(abosDuJour); return abos.length ? lig("Abonnements prélevés", `${eur2(a.fixes)} <small style="color:var(--doux)">(${abos.map(x => x.nom).join(", ")})</small>`) + lig("<b>= Profit net</b>", `<b>${eur2(a.net)}</b>`) : ""; })()}
+    ${(() => { const abos = dates.flatMap(abosDuJour); return abos.length ? lig(`Abonnements prélevés <span class="etoile">*</span>`, `${eur2(a.fixes)} <small style="color:var(--doux)">(${abos.map(x => x.nom).join(", ")})</small>`) : ""; })()}
     ${a.remb ? lig("Remboursements", eur2(a.remb)) : ""}
     ${lig("Marge", pct(a.marge))}
     ${lig("ROAS", a.roas ? `${num(a.roas)} <small style="color:var(--doux)">seuil ${num(a.be)}</small>` : "—")}
+    ${a.fixes ? `<div class="note-etoile">* le profit net est plus bas car un abonnement est tombé ce jour-là</div>` : ""}
   </div>`;
 }
 

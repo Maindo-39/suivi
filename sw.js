@@ -1,7 +1,7 @@
 // Met l'application en cache pour qu'elle s'ouvre hors ligne.
 // Les DONNÉES ne sont jamais mises en cache : elles sont toujours
 // retéléchargées et déchiffrées à la volée.
-const CACHE = "suivi-v14";
+const CACHE = "suivi-v15";
 const COQUILLE = ["./index.html", "./manifest.json", "./icone.png"];
 
 self.addEventListener("install", e => {
