@@ -180,12 +180,6 @@
   .alerte-remb{background:var(--rouge-fond);border:1px solid #57262b;border-radius:13px;
                padding:13px 15px;margin-bottom:12px;font-size:14px;color:var(--rouge)}
 
-  .feu{border-radius:13px;padding:14px 15px;margin-top:14px;font-size:15px;
-       font-weight:700;border:1px solid var(--bord);background:var(--carte2);color:var(--doux)}
-  .feu.ok{background:var(--vert-fond);border-color:#1c5b45;color:var(--vert)}
-  .feu.non{background:var(--rouge-fond);border-color:#5e2429;color:var(--rouge)}
-  .feu small{display:block;font-weight:400;font-size:12px;margin-top:4px;
-             color:var(--doux);line-height:1.5}
   .regle{display:flex;gap:11px;padding:9px 0;font-size:14px;line-height:1.45;
          border-bottom:1px solid var(--bord)}
   .regle:last-child{border-bottom:none}
@@ -248,7 +242,7 @@
   <div class="onglets" id="onglets">
     <button data-p="0" class="actif">Compta</button>
     <button data-p="1">Ads</button>
-    <button data-p="2">Mon argent</button>
+    <button data-p="2">Météo</button>
   </div>
   <div class="pages" id="pages">
     <div class="page" id="page-compta"></div>
@@ -323,17 +317,12 @@
   </section>
 
   <section>
-    <h2>Réserve <span>minimum à garder sur le compte pro</span></h2>
+    <h2>Réserve <span>minimum à garder</span></h2>
     <div id="reserve"></div>
   </section>
 
   <section>
-    <h2>Mon compte pro</h2>
-    <div id="compte"></div>
-  </section>
-
-  <section>
-    <h2>Mon salaire <span>une fois par mois, le 5</span></h2>
+    <h2>Versement <span>une fois par mois, le 5</span></h2>
     <div id="salaire"></div>
   </section>
 
@@ -518,9 +507,12 @@ function rendre() {
   rendreArgent();
 }
 
-/* ── Mon argent : réserve, feu vert/rouge, salaire ──
+/* ── Météo (trésorerie) : réserve et versement mensuel ──
    Tout est calculé ici, sur le téléphone, à partir des chiffres déjà déchiffrés.
-   Le solde que tu tapes reste dans ce téléphone, il n'est envoyé nulle part. */
+   Montants affichés en « pts » (= dollars), volontairement, pour un œil qui traîne. */
+
+const pts = n => (n < 0 ? "−" : "") + Math.abs(n).toLocaleString("fr-FR",
+  { minimumFractionDigits: 0, maximumFractionDigits: 0 }) + " pts";
 
 function joursTermines(n) {
   // Les n derniers jours COMPLETS (aujourd'hui est en cours, il fausserait la moyenne).
@@ -556,35 +548,16 @@ function rendreArgent() {
 
   $("#reserve").innerHTML = `
     <div class="gros-chiffre">
-      <div class="val">${eur(r.total)}</div>
-      <div class="lib">en dessous de ça, aucun retrait — et on lève le pied sur les pubs</div>
+      <div class="val">${pts(r.total)}</div>
+      <div class="lib">en dessous de ça sur le compte pro : aucun retrait,
+        et on lève le pied sur les pubs</div>
     </div>
-    ${lig("Pub — 7 jours d'avance", `<b>${eur(r.pub)}</b> <small>d'après tes ${r.nb} derniers jours</small>`)}
-    ${lig("Fournisseur — 7 jours", `<b>${eur(r.fourn)}</b> <small>lundi + jeudi couverts</small>`)}
-    ${lig("Abonnements — 14 prochains jours", `<b>${eur(r.fixes)}</b>`)}
+    ${lig("Pub — 7 jours d'avance", `<b>${pts(r.pub)}</b> <small>d'après tes ${r.nb} derniers jours</small>`)}
+    ${lig("Fournisseur — 7 jours", `<b>${pts(r.fourn)}</b> <small>lundi + jeudi couverts</small>`)}
+    ${lig("Abonnements — 14 prochains jours", `<b>${pts(r.fixes)}</b>`)}
     <div class="note">Cette réserve suit ton rythme réel : si tu scale, elle monte ;
     si tu baisses les pubs, elle descend. Reviens la voir avant chaque recharge.</div>`;
 
-  // Le champ n'est construit qu'une fois : le rafraîchissement automatique
-  // ne doit pas effacer ce que tu es en train de taper.
-  if (!$("#solde")) {
-    $("#compte").innerHTML = `
-      <label for="solde">Ce qu'il y a sur le compte pro aujourd'hui</label>
-      <input id="solde" type="text" inputmode="decimal" autocomplete="off"
-             placeholder="tape le montant en $">
-      <div id="feu" class="feu">Tape le montant pour savoir où tu en es.</div>
-      <div class="note">Ce chiffre reste dans ton téléphone. L'app n'est pas reliée
-      à ta banque : mets-le à jour quand tu la consultes.</div>`;
-    const inp = $("#solde");
-    inp.value = localStorage.getItem("solde") || "";
-    inp.addEventListener("input", () => {
-      localStorage.setItem("solde", inp.value);
-      localStorage.setItem("solde_d", new Date().toLocaleDateString("en-CA",
-        { timeZone: "America/Chicago" }));
-      rendreFeu();
-    });
-  }
-  rendreFeu();
   rendreSalaire();
 
   if (!$("#regles").innerHTML) $("#regles").innerHTML = `
@@ -592,40 +565,12 @@ function rendreArgent() {
       le 5</b>, sur le profit d'un mois <b>terminé</b>. Jamais en milieu de mois,
       jamais « parce que la semaine était bonne ».</div></div>
     <div class="regle"><div class="num">2</div><div>Jamais un retrait qui fait passer
-      le compte <b>sous la réserve</b>. Si le feu est rouge, la réponse est non.</div></div>
+      le compte <b>sous la réserve</b>. Compte sous la réserve = la réponse est non.</div></div>
     <div class="regle"><div class="num">3</div><div>Cash court ? L'ordre :
       <b>fournisseur → abonnements → pubs</b>. C'est toujours la pub qu'on baisse,
       jamais le fournisseur.</div></div>
     <div class="regle"><div class="num">4</div><div>Le profit laissé dedans n'est pas
-      perdu : c'est lui qui paye le scaling — et ton salaire d'après.</div></div>`;
-}
-
-function rendreFeu() {
-  const feu = $("#feu");
-  if (!feu) return;
-  const brut = (localStorage.getItem("solde") || "").replace(",", ".").replace(/[^0-9.]/g, "");
-  const solde = parseFloat(brut);
-  if (!isFinite(solde)) {
-    feu.className = "feu";
-    feu.textContent = "Tape le montant pour savoir où tu en es.";
-    return;
-  }
-  const r = calculerReserve();
-  const quand = localStorage.getItem("solde_d");
-  const auj = new Date().toLocaleDateString("en-CA", { timeZone: "America/Chicago" });
-  const vieux = quand && quand < auj
-    ? `<small>⚠ montant saisi le ${quand.slice(8, 10)}/${quand.slice(5, 7)} — pense à le remettre à jour</small>` : "";
-  if (solde >= r.total) {
-    feu.className = "feu ok";
-    feu.innerHTML = `🟢 ${eur(solde - r.total)} au-dessus de la réserve
-      <small>Tu peux recharger et scaler tranquille. Retrait : seulement le 5,
-      et seulement ce qui dépasse la réserve.</small>${vieux}`;
-  } else {
-    feu.className = "feu non";
-    feu.innerHTML = `🔴 Il manque ${eur(r.total - solde)} pour la réserve
-      <small>Aucun retrait. Fournisseur d'abord, abonnements ensuite,
-      et la recharge pub prend ce qui reste.</small>${vieux}`;
-  }
+      perdu : c'est lui qui paye le scaling — et ton versement d'après.</div></div>`;
 }
 
 function rendreSalaire() {
@@ -644,19 +589,18 @@ function rendreSalaire() {
 
   $("#salaire").innerHTML = `
     <div class="gros-chiffre">
-      <div class="val">${eur(salaire)}</div>
-      <div class="lib">versé le 5 ${MOIS[mo]} — 25 % du profit net de ${MOIS[pmo]}
-        (${eur(prec.net)})</div>
+      <div class="val">${pts(salaire)}</div>
+      <div class="lib">le 5 ${MOIS[mo]} — 25 % du profit net de ${MOIS[pmo]}
+        (${pts(prec.net)})</div>
     </div>
     ${prec.net <= 0 ? `<div class="note" style="color:var(--rouge)">${MOIS[pmo]} n'a pas
-      dégagé de profit : pas de versement ce mois-ci. Le salaire reprend dès qu'un mois
+      dégagé de profit : pas de versement ce mois-ci. Ça reprend dès qu'un mois
       redevient positif.</div>` : ""}
     ${lig("Prochain versement", `<b>le 5 ${MOIS[smo]}</b>`)}
-    ${lig("Estimation", `<b>${eur(estim)}</b> <small>25 % de ${MOIS[mo]}
-      en cours — ça bouge chaque jour</small>`)}
-    <div class="note">Le salaire suit la machine avec un mois de retard : un gros mois
-    d'${MOIS[mo]} = un gros versement le 5 ${MOIS[smo]}. Les 75 % restants payent
-    le scaling.</div>`;
+    ${lig("Estimation", `<b>${pts(estim)}</b> <small>25 % du mois en cours</small>`)}
+    <div class="note">L'estimation bouge chaque jour. Le versement suit la machine avec
+    un mois de retard : un gros mois d'${MOIS[mo]} = un gros versement le 5 ${MOIS[smo]}.
+    Les 75 % restants payent le scaling.</div>`;
 }
 
 function rendreGraph(dates) {
@@ -1029,7 +973,7 @@ function organiserPages() {
   [$("#alerte-remb"), $("#hero"), document.querySelector(".tuiles"),
    sec("graph"), sec("cal"), sec("detail"), sec("abos")].forEach(el => { if (el) pc.appendChild(el); });
   [sec("meta"), sec("ads"), sec("pays"), sec("produits")].forEach(el => { if (el) pa.appendChild(el); });
-  [sec("reserve"), sec("compte"), sec("salaire"), sec("regles")].forEach(el => { if (el) pm.appendChild(el); });
+  [sec("reserve"), sec("salaire"), sec("regles")].forEach(el => { if (el) pm.appendChild(el); });
   const btns = $("#onglets").querySelectorAll("button");
   btns.forEach(b => b.onclick = () => pages.scrollTo({ left: (+b.dataset.p) * pages.clientWidth, behavior: "smooth" }));
   pages.addEventListener("scroll", () => {
