@@ -179,6 +179,23 @@
 
   .alerte-remb{background:var(--rouge-fond);border:1px solid #57262b;border-radius:13px;
                padding:13px 15px;margin-bottom:12px;font-size:14px;color:var(--rouge)}
+
+  .feu{border-radius:13px;padding:14px 15px;margin-top:14px;font-size:15px;
+       font-weight:700;border:1px solid var(--bord);background:var(--carte2);color:var(--doux)}
+  .feu.ok{background:var(--vert-fond);border-color:#1c5b45;color:var(--vert)}
+  .feu.non{background:var(--rouge-fond);border-color:#5e2429;color:var(--rouge)}
+  .feu small{display:block;font-weight:400;font-size:12px;margin-top:4px;
+             color:var(--doux);line-height:1.5}
+  .regle{display:flex;gap:11px;padding:9px 0;font-size:14px;line-height:1.45;
+         border-bottom:1px solid var(--bord)}
+  .regle:last-child{border-bottom:none}
+  .regle .num{flex:none;width:23px;height:23px;border-radius:50%;background:var(--carte2);
+              border:1px solid var(--bord);color:var(--accent);font-size:12px;
+              font-weight:700;display:grid;place-items:center;margin-top:1px}
+  .gros-chiffre{text-align:center;margin-bottom:13px}
+  .gros-chiffre .val{font-size:36px;font-weight:800;letter-spacing:-1.5px;
+                     font-variant-numeric:tabular-nums}
+  .gros-chiffre .lib{font-size:12px;color:var(--doux);margin-top:2px}
   footer{text-align:center;font-size:11px;color:var(--tres-doux);margin-top:18px;line-height:1.7}
   footer button{background:none;border:none;color:var(--tres-doux);
                 font-size:11px;text-decoration:underline;font-family:inherit}
@@ -231,10 +248,12 @@
   <div class="onglets" id="onglets">
     <button data-p="0" class="actif">Compta</button>
     <button data-p="1">Ads</button>
+    <button data-p="2">Mon argent</button>
   </div>
   <div class="pages" id="pages">
     <div class="page" id="page-compta"></div>
     <div class="page" id="page-ads"></div>
+    <div class="page" id="page-argent"></div>
   </div>
   <div id="alerte-remb"></div>
 
@@ -301,6 +320,26 @@
   <section>
     <h2>Abonnements <span>coûts fixes</span></h2>
     <div id="abos"></div>
+  </section>
+
+  <section>
+    <h2>Réserve <span>minimum à garder sur le compte pro</span></h2>
+    <div id="reserve"></div>
+  </section>
+
+  <section>
+    <h2>Mon compte pro</h2>
+    <div id="compte"></div>
+  </section>
+
+  <section>
+    <h2>Mon salaire <span>une fois par mois, le 5</span></h2>
+    <div id="salaire"></div>
+  </section>
+
+  <section>
+    <h2>Les règles <span>en cas de doute</span></h2>
+    <div id="regles"></div>
   </section>
 
   <footer>
@@ -476,6 +515,148 @@ function rendre() {
   rendreDetail(a);
   rendreAbos();
   rendreRemb(dates);
+  rendreArgent();
+}
+
+/* ── Mon argent : réserve, feu vert/rouge, salaire ──
+   Tout est calculé ici, sur le téléphone, à partir des chiffres déjà déchiffrés.
+   Le solde que tu tapes reste dans ce téléphone, il n'est envoyé nulle part. */
+
+function joursTermines(n) {
+  // Les n derniers jours COMPLETS (aujourd'hui est en cours, il fausserait la moyenne).
+  const t = toutesLesDates();
+  return t.slice(Math.max(0, t.length - 1 - n), t.length - 1);
+}
+
+function calculerReserve() {
+  const jours = joursTermines(7);
+  const a = agreger(jours);
+  // Abonnements des 14 prochains jours (aujourd'hui compris).
+  const t = toutesLesDates();
+  const d = new Date((t[t.length - 1] || new Date().toLocaleDateString("en-CA",
+    { timeZone: "America/Chicago" })) + "T12:00:00");
+  let fixes14 = 0;
+  for (let i = 0; i < 14; i++) {
+    const iso = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`
+              + `-${String(d.getDate()).padStart(2, "0")}`;
+    fixes14 += fixesJour(iso);
+    d.setDate(d.getDate() + 1);
+  }
+  return { pub: a.spend, fourn: a.cogs, fixes: fixes14,
+           total: a.spend + a.cogs + fixes14, nb: jours.length };
+}
+
+function moisDates(an, mois) {
+  const pref = `${an}-${String(mois + 1).padStart(2, "0")}`;
+  return toutesLesDates().filter(d => d.startsWith(pref));
+}
+
+function rendreArgent() {
+  const r = calculerReserve();
+
+  $("#reserve").innerHTML = `
+    <div class="gros-chiffre">
+      <div class="val">${eur(r.total)}</div>
+      <div class="lib">en dessous de ça, aucun retrait — et on lève le pied sur les pubs</div>
+    </div>
+    ${lig("Pub — 7 jours d'avance", `<b>${eur(r.pub)}</b> <small>d'après tes ${r.nb} derniers jours</small>`)}
+    ${lig("Fournisseur — 7 jours", `<b>${eur(r.fourn)}</b> <small>lundi + jeudi couverts</small>`)}
+    ${lig("Abonnements — 14 prochains jours", `<b>${eur(r.fixes)}</b>`)}
+    <div class="note">Cette réserve suit ton rythme réel : si tu scale, elle monte ;
+    si tu baisses les pubs, elle descend. Reviens la voir avant chaque recharge.</div>`;
+
+  // Le champ n'est construit qu'une fois : le rafraîchissement automatique
+  // ne doit pas effacer ce que tu es en train de taper.
+  if (!$("#solde")) {
+    $("#compte").innerHTML = `
+      <label for="solde">Ce qu'il y a sur le compte pro aujourd'hui</label>
+      <input id="solde" type="text" inputmode="decimal" autocomplete="off"
+             placeholder="tape le montant en $">
+      <div id="feu" class="feu">Tape le montant pour savoir où tu en es.</div>
+      <div class="note">Ce chiffre reste dans ton téléphone. L'app n'est pas reliée
+      à ta banque : mets-le à jour quand tu la consultes.</div>`;
+    const inp = $("#solde");
+    inp.value = localStorage.getItem("solde") || "";
+    inp.addEventListener("input", () => {
+      localStorage.setItem("solde", inp.value);
+      localStorage.setItem("solde_d", new Date().toLocaleDateString("en-CA",
+        { timeZone: "America/Chicago" }));
+      rendreFeu();
+    });
+  }
+  rendreFeu();
+  rendreSalaire();
+
+  if (!$("#regles").innerHTML) $("#regles").innerHTML = `
+    <div class="regle"><div class="num">1</div><div>Je me paye <b>une seule fois par mois,
+      le 5</b>, sur le profit d'un mois <b>terminé</b>. Jamais en milieu de mois,
+      jamais « parce que la semaine était bonne ».</div></div>
+    <div class="regle"><div class="num">2</div><div>Jamais un retrait qui fait passer
+      le compte <b>sous la réserve</b>. Si le feu est rouge, la réponse est non.</div></div>
+    <div class="regle"><div class="num">3</div><div>Cash court ? L'ordre :
+      <b>fournisseur → abonnements → pubs</b>. C'est toujours la pub qu'on baisse,
+      jamais le fournisseur.</div></div>
+    <div class="regle"><div class="num">4</div><div>Le profit laissé dedans n'est pas
+      perdu : c'est lui qui paye le scaling — et ton salaire d'après.</div></div>`;
+}
+
+function rendreFeu() {
+  const feu = $("#feu");
+  if (!feu) return;
+  const brut = (localStorage.getItem("solde") || "").replace(",", ".").replace(/[^0-9.]/g, "");
+  const solde = parseFloat(brut);
+  if (!isFinite(solde)) {
+    feu.className = "feu";
+    feu.textContent = "Tape le montant pour savoir où tu en es.";
+    return;
+  }
+  const r = calculerReserve();
+  const quand = localStorage.getItem("solde_d");
+  const auj = new Date().toLocaleDateString("en-CA", { timeZone: "America/Chicago" });
+  const vieux = quand && quand < auj
+    ? `<small>⚠ montant saisi le ${quand.slice(8, 10)}/${quand.slice(5, 7)} — pense à le remettre à jour</small>` : "";
+  if (solde >= r.total) {
+    feu.className = "feu ok";
+    feu.innerHTML = `🟢 ${eur(solde - r.total)} au-dessus de la réserve
+      <small>Tu peux recharger et scaler tranquille. Retrait : seulement le 5,
+      et seulement ce qui dépasse la réserve.</small>${vieux}`;
+  } else {
+    feu.className = "feu non";
+    feu.innerHTML = `🔴 Il manque ${eur(r.total - solde)} pour la réserve
+      <small>Aucun retrait. Fournisseur d'abord, abonnements ensuite,
+      et la recharge pub prend ce qui reste.</small>${vieux}`;
+  }
+}
+
+function rendreSalaire() {
+  const t = toutesLesDates();
+  if (!t.length) { $("#salaire").innerHTML = ""; return; }
+  const auj = t[t.length - 1];
+  const an = +auj.slice(0, 4), mo = +auj.slice(5, 7) - 1;
+  let pan = an, pmo = mo - 1;
+  if (pmo < 0) { pmo = 11; pan--; }
+  const prec = agreger(moisDates(pan, pmo));
+  const enCours = agreger(moisDates(an, mo).filter(d => d < auj));
+  const salaire = Math.max(0, prec.net * 0.25);
+  const estim = Math.max(0, enCours.net * 0.25);
+  let san = an, smo = mo + 1;
+  if (smo > 11) { smo = 0; san++; }
+
+  $("#salaire").innerHTML = `
+    <div class="gros-chiffre">
+      <div class="val">${eur(salaire)}</div>
+      <div class="lib">versé le 5 ${MOIS[mo]} — 25 % du profit net de ${MOIS[pmo]}
+        (${eur(prec.net)})</div>
+    </div>
+    ${prec.net <= 0 ? `<div class="note" style="color:var(--rouge)">${MOIS[pmo]} n'a pas
+      dégagé de profit : pas de versement ce mois-ci. Le salaire reprend dès qu'un mois
+      redevient positif.</div>` : ""}
+    ${lig("Prochain versement", `<b>le 5 ${MOIS[smo]}</b>`)}
+    ${lig("Estimation", `<b>${eur(estim)}</b> <small>25 % de ${MOIS[mo]}
+      en cours — ça bouge chaque jour</small>`)}
+    <div class="note">Le salaire suit la machine avec un mois de retard : un gros mois
+    d'${MOIS[mo]} = un gros versement le 5 ${MOIS[smo]}. Les 75 % restants payent
+    le scaling.</div>`;
 }
 
 function rendreGraph(dates) {
@@ -840,14 +1021,15 @@ setInterval(() => {
   if (j && m) entrer(j, m, true);
 }, 60000);
 
-// Répartit les sections en 2 pages (Compta / Ads) qu'on fait défiler à l'horizontale.
+// Répartit les sections en 3 pages (Compta / Ads / Mon argent) qu'on fait défiler à l'horizontale.
 function organiserPages() {
-  const pc = $("#page-compta"), pa = $("#page-ads"), pages = $("#pages");
-  if (!pc || !pa) return;
+  const pc = $("#page-compta"), pa = $("#page-ads"), pm = $("#page-argent"), pages = $("#pages");
+  if (!pc || !pa || !pm) return;
   const sec = id => { const e = $("#" + id); return e ? e.closest("section") : null; };
   [$("#alerte-remb"), $("#hero"), document.querySelector(".tuiles"),
    sec("graph"), sec("cal"), sec("detail"), sec("abos")].forEach(el => { if (el) pc.appendChild(el); });
   [sec("meta"), sec("ads"), sec("pays"), sec("produits")].forEach(el => { if (el) pa.appendChild(el); });
+  [sec("reserve"), sec("compte"), sec("salaire"), sec("regles")].forEach(el => { if (el) pm.appendChild(el); });
   const btns = $("#onglets").querySelectorAll("button");
   btns.forEach(b => b.onclick = () => pages.scrollTo({ left: (+b.dataset.p) * pages.clientWidth, behavior: "smooth" }));
   pages.addEventListener("scroll", () => {
