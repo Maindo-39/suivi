@@ -389,7 +389,7 @@ const JSEM = ["L", "M", "M", "J", "V", "S", "D"];
 const MOIS = ["janvier", "février", "mars", "avril", "mai", "juin", "juillet",
               "août", "septembre", "octobre", "novembre", "décembre"];
 
-let D = null, PERIODE = 7, SEL_A = null, SEL_B = null, CAL_AN = null, CAL_MOIS = null;
+let D = null, PERIODE = 7, SEL_A = null, SEL_B = null, SEL_ADS = null, CAL_AN = null, CAL_MOIS = null;
 
 const PERIODES = [
   { l: "Auj.", j: 1 }, { l: "3 j", j: 3 }, { l: "7 j", j: 7 },
@@ -477,10 +477,10 @@ function classe(a) {
 }
 
 function rendre() {
-  const [deb, fin] = bornes();
-  const dates = deb ? toutesLesDates().filter(d => d >= deb && d <= fin) : fenetre(PERIODE);
+  const dates = fenetre(PERIODE);
   const a = agreger(dates);
-  const p = deb ? { ca: 0, spend: 0 } : agreger(fenetre(PERIODE, 1));
+  const p = agreger(fenetre(PERIODE, 1));
+  const datesAds = SEL_ADS ? [SEL_ADS] : dates;   // la page Ads suit SON calendrier ; Compta jamais
   const c = classe(a);
 
   $("#hero").className = "hero " + c;
@@ -508,10 +508,10 @@ function rendre() {
 
   rendreGraph(dates);
   rendreCalendrier();
-  rendreMeta(a, dates);
-  rendreAds(dates);
-  rendrePays(dates);
-  rendreProduits(dates);
+  rendreMeta(a, datesAds);
+  rendreAds(datesAds);
+  rendrePays(datesAds);
+  rendreProduits(datesAds);
   rendreDetail(a);
   rendreAbos();
   rendreRemb(dates);
@@ -652,30 +652,34 @@ function rendreCalendrier() {
   const decalage = (new Date(CAL_AN, CAL_MOIS, 1).getDay() + 6) % 7;
   const nb = new Date(CAL_AN, CAL_MOIS + 1, 0).getDate();
 
-  const [deb, fin] = bornes();
-  let h = JSEM.map(j => `<div class="jsem">${j}</div>`).join("");
-  for (let i = 0; i < decalage; i++) h += `<div class="case vide"></div>`;
-  for (let d = 1; d <= nb; d++) {
-    const iso = `${CAL_AN}-${String(CAL_MOIS + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
-    // Un jour où l'on a dépensé sans vendre est un jour en perte :
-    // il doit se colorer en rouge, pas rester gris comme un jour vide.
-    const j = (D.jours || {})[iso] || {};
-    const actif = (j.ca || 0) + (j.n || 0) + ((D.spend || {})[iso] || 0);
-    let cl = "";
-    if (actif > 0) {
-      cl = { ok: "a", moyen: "b", non: "c" }[classe(agreger([iso]))];
+  const grille = (sa, sb) => {
+    let h = JSEM.map(j => `<div class="jsem">${j}</div>`).join("");
+    for (let i = 0; i < decalage; i++) h += `<div class="case vide"></div>`;
+    for (let d = 1; d <= nb; d++) {
+      const iso = `${CAL_AN}-${String(CAL_MOIS + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+      const j = (D.jours || {})[iso] || {};
+      const actif = (j.ca || 0) + (j.n || 0) + ((D.spend || {})[iso] || 0);
+      let cl = actif > 0 ? { ok: "a", moyen: "b", non: "c" }[classe(agreger([iso]))] : "";
+      const hi = sb || sa;
+      if (sa && iso >= sa && iso <= hi) cl += " dans";
+      if (iso === sa || iso === sb) cl += " bout";
+      const abo = abosDuJour(iso).length ? '<span class="abo-dot"></span>' : "";
+      h += `<div class="case ${cl}" data-d="${iso}">${d}${abo}</div>`;
     }
-    if (deb && iso >= deb && iso <= fin) cl += " dans";
-    if (iso === SEL_A || iso === SEL_B) cl += " bout";
-    const abo = abosDuJour(iso).length ? '<span class="abo-dot"></span>' : "";
-    h += `<div class="case ${cl}" data-d="${iso}">${d}${abo}</div>`;
+    return h;
+  };
+  // Calendrier COMPTA : pilote seulement le détail du jour (comportement d'origine, Compta intact).
+  const calC = $("#cal");
+  if (calC) {
+    calC.innerHTML = grille(SEL_A, SEL_B);
+    calC.querySelectorAll(".case[data-d]").forEach(el => el.onclick = () => { choisir(el.dataset.d); rendreCalendrier(); });
   }
-  document.querySelectorAll(".cal").forEach(cal => {
-    cal.innerHTML = h;
-    cal.querySelectorAll(".case[data-d]").forEach(el => {
-      el.onclick = () => { choisir(el.dataset.d); construirePeriodes(); rendre(); };
-    });
-  });
+  // Calendrier ADS : indépendant — pilote UNIQUEMENT la page Ads.
+  const calA = $("#cal2");
+  if (calA) {
+    calA.innerHTML = grille(SEL_ADS, null);
+    calA.querySelectorAll(".case[data-d]").forEach(el => el.onclick = () => { SEL_ADS = SEL_ADS === el.dataset.d ? null : el.dataset.d; rendre(); });
+  }
   rendreSelection();
 }
 
@@ -875,9 +879,9 @@ function rendreMaj() {
 
 function construirePeriodes() {
   $("#periodes").innerHTML = PERIODES.map(p =>
-    `<button data-j="${p.j}" class="${!SEL_A && p.j === PERIODE ? "actif" : ""}">${p.l}</button>`).join("");
+    `<button data-j="${p.j}" class="${p.j === PERIODE ? "actif" : ""}">${p.l}</button>`).join("");
   $("#periodes").querySelectorAll("button").forEach(b => {
-    b.onclick = () => { PERIODE = +b.dataset.j; SEL_A = null; SEL_B = null; construirePeriodes(); rendre(); };
+    b.onclick = () => { PERIODE = +b.dataset.j; SEL_ADS = null; construirePeriodes(); rendre(); };
   });
 }
 
