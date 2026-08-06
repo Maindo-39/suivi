@@ -278,12 +278,22 @@
   <section>
     <h2>Calendrier</h2>
     <div class="cal-tete">
-      <button id="cal-prec" title="Mois précédent">&#8249;</button>
-      <div class="mois" id="cal-mois"></div>
-      <button id="cal-suiv" title="Mois suivant">&#8250;</button>
+      <button id="cal-prec" class="cal-prec" title="Mois précédent">&#8249;</button>
+      <div class="mois cal-mois" id="cal-mois"></div>
+      <button id="cal-suiv" class="cal-suiv" title="Mois suivant">&#8250;</button>
     </div>
     <div class="cal" id="cal"></div>
     <div id="detail-jour"></div>
+  </section>
+
+  <section>
+    <h2>Calendrier <span>choisis un jour</span></h2>
+    <div class="cal-tete">
+      <button class="cal-prec" title="Mois précédent">&#8249;</button>
+      <div class="mois cal-mois"></div>
+      <button class="cal-suiv" title="Mois suivant">&#8250;</button>
+    </div>
+    <div class="cal" id="cal2"></div>
   </section>
 
   <section>
@@ -467,9 +477,10 @@ function classe(a) {
 }
 
 function rendre() {
-  const dates = fenetre(PERIODE);
+  const [deb, fin] = bornes();
+  const dates = deb ? toutesLesDates().filter(d => d >= deb && d <= fin) : fenetre(PERIODE);
   const a = agreger(dates);
-  const p = agreger(fenetre(PERIODE, 1));
+  const p = deb ? { ca: 0, spend: 0 } : agreger(fenetre(PERIODE, 1));
   const c = classe(a);
 
   $("#hero").className = "hero " + c;
@@ -630,13 +641,13 @@ function rendreCalendrier() {
     const dern = new Date(t[t.length - 1] + "T12:00:00");
     CAL_AN = dern.getFullYear(); CAL_MOIS = dern.getMonth();
   }
-  $("#cal-mois").textContent = MOIS[CAL_MOIS] + " " + CAL_AN;
+  document.querySelectorAll(".cal-mois").forEach(el => el.textContent = MOIS[CAL_MOIS] + " " + CAL_AN);
 
   /* On ne laisse pas sortir de la plage réellement connue. */
   const prem = new Date(t[0] + "T12:00:00"), dern = new Date(t[t.length - 1] + "T12:00:00");
   const rang = CAL_AN * 12 + CAL_MOIS;
-  $("#cal-prec").disabled = rang <= prem.getFullYear() * 12 + prem.getMonth();
-  $("#cal-suiv").disabled = rang >= dern.getFullYear() * 12 + dern.getMonth();
+  document.querySelectorAll(".cal-prec").forEach(b => b.disabled = rang <= prem.getFullYear() * 12 + prem.getMonth());
+  document.querySelectorAll(".cal-suiv").forEach(b => b.disabled = rang >= dern.getFullYear() * 12 + dern.getMonth());
 
   const decalage = (new Date(CAL_AN, CAL_MOIS, 1).getDay() + 6) % 7;
   const nb = new Date(CAL_AN, CAL_MOIS + 1, 0).getDate();
@@ -659,10 +670,11 @@ function rendreCalendrier() {
     const abo = abosDuJour(iso).length ? '<span class="abo-dot"></span>' : "";
     h += `<div class="case ${cl}" data-d="${iso}">${d}${abo}</div>`;
   }
-  const cal = $("#cal");
-  cal.innerHTML = h;
-  cal.querySelectorAll(".case[data-d]").forEach(el => {
-    el.onclick = () => { choisir(el.dataset.d); rendreCalendrier(); };
+  document.querySelectorAll(".cal").forEach(cal => {
+    cal.innerHTML = h;
+    cal.querySelectorAll(".case[data-d]").forEach(el => {
+      el.onclick = () => { choisir(el.dataset.d); construirePeriodes(); rendre(); };
+    });
   });
   rendreSelection();
 }
@@ -863,20 +875,20 @@ function rendreMaj() {
 
 function construirePeriodes() {
   $("#periodes").innerHTML = PERIODES.map(p =>
-    `<button data-j="${p.j}" class="${p.j === PERIODE ? "actif" : ""}">${p.l}</button>`).join("");
+    `<button data-j="${p.j}" class="${!SEL_A && p.j === PERIODE ? "actif" : ""}">${p.l}</button>`).join("");
   $("#periodes").querySelectorAll("button").forEach(b => {
-    b.onclick = () => { PERIODE = +b.dataset.j; construirePeriodes(); rendre(); };
+    b.onclick = () => { PERIODE = +b.dataset.j; SEL_A = null; SEL_B = null; construirePeriodes(); rendre(); };
   });
 }
 
-$("#cal-prec").onclick = () => {
+document.querySelectorAll(".cal-prec").forEach(b => b.onclick = () => {
   CAL_MOIS--; if (CAL_MOIS < 0) { CAL_MOIS = 11; CAL_AN--; }
   rendreCalendrier();
-};
-$("#cal-suiv").onclick = () => {
+});
+document.querySelectorAll(".cal-suiv").forEach(b => b.onclick = () => {
   CAL_MOIS++; if (CAL_MOIS > 11) { CAL_MOIS = 0; CAL_AN++; }
   rendreCalendrier();
-};
+});
 
 async function entrer(jeton, mdp, silencieux) {
   const btn = $("#btn-entrer"), err = $("#erreur");
@@ -972,7 +984,7 @@ function organiserPages() {
   const sec = id => { const e = $("#" + id); return e ? e.closest("section") : null; };
   [$("#alerte-remb"), $("#hero"), document.querySelector(".tuiles"),
    sec("graph"), sec("cal"), sec("detail"), sec("abos")].forEach(el => { if (el) pc.appendChild(el); });
-  [sec("meta"), sec("ads"), sec("pays"), sec("produits")].forEach(el => { if (el) pa.appendChild(el); });
+  [sec("cal2"), sec("meta"), sec("ads"), sec("pays"), sec("produits")].forEach(el => { if (el) pa.appendChild(el); });
   [sec("reserve"), sec("salaire"), sec("regles")].forEach(el => { if (el) pm.appendChild(el); });
   const btns = $("#onglets").querySelectorAll("button");
   btns.forEach(b => b.onclick = () => pages.scrollTo({ left: (+b.dataset.p) * pages.clientWidth, behavior: "smooth" }));
