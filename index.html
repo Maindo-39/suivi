@@ -109,6 +109,11 @@
               font-variant-numeric:tabular-nums}
   .tuile .det{font-size:11px;color:var(--doux);margin-top:2px}
   .hausse{color:var(--vert)} .baisse{color:var(--rouge)}
+  /* Crédit Pinterest offert : bandeau doré tant qu'on est sous les 100 $. */
+  .pin-credit{background:var(--orange-fond);border:1px solid #4a3a10;border-radius:13px;
+    padding:12px 14px;font-size:12.5px;line-height:1.55;color:#e8cd94;margin-bottom:16px}
+  .pin-credit b{color:var(--orange);font-weight:700}
+  .pin-star{color:var(--orange)}
 
   section{background:var(--carte);border:1px solid var(--bord);
           border-radius:17px;padding:16px;margin-bottom:12px}
@@ -265,6 +270,8 @@
     <div class="tuile"><div class="lib">Dépensé</div>
       <div class="val" id="t-spend"></div><div class="det" id="t-spend-d"></div></div>
   </div>
+
+  <div class="pin-credit" id="pin-credit" hidden></div>
 
   <section>
     <h2>Profit par jour <span id="graph-note"></span></h2>
@@ -501,6 +508,24 @@ function rendre() {
   $("#t-roas-d").innerHTML = a.be ? `seuil ${num(a.be)}` : "&nbsp;";
   $("#t-spend").textContent = eur(a.spend);
   $("#t-spend-d").innerHTML = delta(a.spend, p.spend) || "&nbsp;";
+
+  // Crédit Pinterest : tant qu'il n'est pas dépassé, une étoile sur « Dépensé »
+  // et un bandeau rappellent que les dépenses Pinterest sont encore offertes
+  // (donc pas dans ce chiffre). Une fois les 100 $ franchis, tout disparaît :
+  // Pinterest rejoint le Dépensé, c'est devenu du vrai argent.
+  const pin = D.pinterest;
+  const bandeau = $("#pin-credit");
+  if (pin && pin.credit && !pin.atteint) {
+    $("#t-spend").innerHTML = eur(a.spend)
+      + ' <span class="pin-star" title="Dépenses Pinterest encore offertes, pas comptées ici">★</span>';
+    bandeau.hidden = false;
+    bandeau.innerHTML = '<span class="pin-star">★</span> Tes <b>' + eur(pin.cumul)
+      + '</b> de pub Pinterest sont <b>encore offerts</b> (crédit ' + eur(pin.credit)
+      + '). Ils ne comptent pas dans ton Dépensé. Dès que tu dépasses '
+      + eur(pin.credit) + ', ce qui suit devient ta vraie dépense — et l\'étoile disparaît.';
+  } else {
+    bandeau.hidden = true;
+  }
 
   const marge_spend = a.ca / (a.be || 1) - a.spend;
   $("#graph-note").textContent = a.roas >= a.be && marge_spend > 0
