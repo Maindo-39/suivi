@@ -473,7 +473,13 @@ function agreger(dates) {
   a.couts = a.spend + variable + a.fixes;        // total des coûts (abonnements compris)
   a.marge = a.ca ? a.contribution / a.ca : 0;    // marge de contribution
   a.roas = a.spend ? a.ca / a.spend : 0;
-  a.be = a.ca - variable > 0 ? a.ca / (a.ca - variable) : 0;
+  // ROAS BE = seuil de rentabilité = CA brut ÷ (CA brut − COGS − frais). Les
+  // remboursements n'y entrent PAS (règle du propriétaire) : sinon un jour de gros
+  // remboursement gonflait le seuil (ex. 1,59 au lieu de 1,32). CA brut =
+  // net + remboursements, pour coller au calcul du SAS. La marge et le profit,
+  // eux, gardent les remboursements (c'est un vrai coût) — seul le SEUIL les exclut.
+  const caBrut = a.ca + a.remb;
+  a.be = (caBrut - a.cogs - a.frais) > 0 ? caBrut / (caBrut - a.cogs - a.frais) : 0;
   return a;
 }
 
