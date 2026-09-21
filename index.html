@@ -466,7 +466,11 @@ function agreger(dates) {
       a.im += ad.im || 0; a.cl += ad.cl || 0; a.cv += ad.cv || 0; a.va += ad.va || 0;
     }
   }
-  const variable = a.cogs + a.frais + a.remb;
+  // netSales (a.ca) est DÉJÀ net des remboursements (« Total sales » de Shopify,
+  // = ventes − remboursements). On ne les resoustrait donc PAS ici : sinon on les
+  // compterait DEUX FOIS et le profit serait sous-estimé. Les remboursements
+  // restent affichés partout (alerte + lignes de détail), pour information.
+  const variable = a.cogs + a.frais;
   a.contribution = a.ca - a.spend - variable;   // profit de contribution (SANS abonnements) — le signal de scale
   a.profit = a.contribution;                     // "profit" = contribution : verdict, couleurs du calendrier, graphe
   a.net = a.contribution - a.fixes;              // profit net = vrai bénéf (abonnements déduits)
@@ -758,7 +762,7 @@ function rendreSelection() {
     ${lig("Coût des produits", eur2(a.cogs))}
     ${lig("Frais de paiement", eur2(a.frais))}
     ${(() => { const abos = dates.flatMap(abosDuJour); return abos.length ? lig(`Abonnements prélevés <span class="etoile">*</span>`, `${eur2(a.fixes)} <small style="color:var(--doux)">(${abos.map(x => x.nom).join(", ")})</small>`) : ""; })()}
-    ${a.remb ? lig("Remboursements", eur2(a.remb)) : ""}
+    ${a.remb ? lig(`Remboursements <small style="color:var(--doux)">(déjà déduits du CA)</small>`, eur2(a.remb)) : ""}
     ${lig("Marge", pct(a.marge))}
     ${lig("ROAS", a.roas ? `${num(a.roas)} <small style="color:var(--doux)">seuil ${num(a.be)}</small>` : "—")}
     ${a.fixes ? `<div class="note-etoile">* le profit net est plus bas car un abonnement est tombé ce jour-là</div>` : ""}
@@ -866,7 +870,7 @@ function rendreDetail(a) {
     lig("Coût des produits", eur2(a.cogs)) +
     lig("Frais de paiement", eur2(a.frais) + ` <small style="color:var(--doux)">(${a.ca ? pct(a.frais / a.ca) : "—"})</small>`) +
     (a.fixes ? lig("Abonnements", eur2(a.fixes)) : "") +
-    lig("Remboursements", a.remb ? `<span style="color:var(--rouge)">${eur2(a.remb)}</span>` : "aucun") +
+    lig(`Remboursements <small style="color:var(--doux)">(déjà déduits du CA)</small>`, a.remb ? `<span style="color:var(--rouge)">${eur2(a.remb)}</span>` : "aucun") +
     lig("<b>Total des coûts</b>", `<b>${eur2(a.couts)}</b>`);
 }
 
