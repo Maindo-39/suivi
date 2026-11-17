@@ -97,6 +97,7 @@
   .verdict{font-size:29px;font-weight:800;letter-spacing:-.9px;line-height:1.1}
   .hero.ok .verdict{color:var(--vert)} .hero.moyen .verdict{color:var(--orange)}
   .hero.non .verdict{color:var(--rouge)}
+  .hero.encours{border-color:var(--doux)} .hero.encours .verdict{color:var(--texte)}
   .profit{font-size:44px;font-weight:800;letter-spacing:-2px;margin:6px 0 2px;
           font-variant-numeric:tabular-nums}
   .sous{font-size:13px;color:var(--doux)}
@@ -510,10 +511,13 @@ function rendre() {
   const p = agreger(fenetre(PERIODE, 1));
   const datesAds = SEL_ADS ? [SEL_ADS] : dates;   // la page Ads suit SON calendrier ; Compta jamais
   const c = classe(a);
+  // La journée de Chicago en cours (démarre à 13 h, heure de Bangkok) n'a pas de verdict :
+  // le matin à Bangkok elle est encore vide, et « juste à l'équilibre » sur des zéros trompe.
+  const tt = toutesLesDates(), encours = dates.length === 1 && dates[0] === tt[tt.length - 1];
 
-  $("#hero").className = "hero " + c;
-  $("#verdict").textContent = c === "ok" ? "RENTABLE"
-    : c === "moyen" ? "JUSTE À L'ÉQUILIBRE" : "PAS RENTABLE";
+  $("#hero").className = "hero " + (encours ? "encours" : c);
+  $("#verdict").textContent = encours ? "AUJOURD'HUI · EN COURS"
+    : c === "ok" ? "RENTABLE" : c === "moyen" ? "JUSTE À L'ÉQUILIBRE" : "PAS RENTABLE";
   $("#profit").textContent = eur(a.profit);
   $("#sous-profit").innerHTML =
     `net <b style="color:var(--texte)">${eur(a.net)}</b> <small style="color:var(--doux)">après abonnements</small> · marge ${pct(a.marge)} · ${a.n} cmd`
