@@ -283,10 +283,12 @@
   .kpis .k .v{font-size:26px;font-weight:900;letter-spacing:-.8px;margin-top:3px}
   .kpis .k.large .v{font-size:38px}
   .kpis .k .s{font-size:12px;color:var(--doux)}
-  .motiv{position:relative;border-radius:22px;overflow:hidden;min-height:230px;margin-bottom:12px;
+  .motiv{position:relative;border-radius:22px;overflow:hidden;min-height:230px;margin:0 -6px 12px;
          display:flex;flex-direction:column;justify-content:flex-end;padding:20px;
          background:radial-gradient(120% 90% at 85% 0%,#ff7a00 0%,#7a2600 35%,#1a0800 65%,#000 100%);border:1px solid #3a1d00}
-  .motiv img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.75}
+  .motiv img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+  .motiv.img-ok{min-height:0;aspect-ratio:16/9;padding:0}
+  .motiv.img-ok::after,.motiv.img-ok .q,.motiv.img-ok .m{display:none}
   .motiv::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 30%,rgba(0,0,0,.85))}
   .motiv .q{position:relative;z-index:1;font-size:27px;font-weight:900;line-height:1.12;letter-spacing:-.6px}
   .motiv .m{position:relative;z-index:1;font-size:12px;font-weight:800;color:var(--accent2);text-transform:uppercase;letter-spacing:1.4px;margin-bottom:8px}
@@ -1233,7 +1235,7 @@ function rendreTodo() {
   const claude = T.filter(x => x.qui === "claude" && (!x.fait || x.jour >= plusJours(aujL, -7)));
   const nomJ = TD.jour === aujL ? "aujourd'hui" : JOURS3[new Date(TD.jour + "T12:00:00Z").getUTCDay()] + " " + ddmm(TD.jour);
   w.innerHTML = `
-    <div class="motiv"><img src="img/motiv-${String(mi + 1).padStart(2, "0")}.jpg" alt="" onerror="this.remove()">
+    <div class="motiv"><img src="img/motiv-${String(mi + 1).padStart(2, "0")}.jpg?v=3" alt="" onload="this.parentNode.classList.add('img-ok')" onerror="this.remove()">
       <div class="m">${MOIS[mi]} · objectif 100 KD</div><div class="q">${PHRASES[mi]}</div></div>
     <div class="semaine" id="td-sem">${jours.map(iso => { const d = new Date(iso + "T12:00:00Z");
       const reste = T.filter(x => x.qui === "moi" && x.jour === iso && !x.fait).length;
