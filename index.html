@@ -97,6 +97,49 @@
   .verdict{font-size:29px;font-weight:800;letter-spacing:-.9px;line-height:1.1}
   .hero.ok .verdict{color:var(--vert)} .hero.moyen .verdict{color:var(--orange)}
   .hero.non .verdict{color:var(--rouge)}
+  .marge-l{display:flex;align-items:baseline;justify-content:space-between;margin:8px 0 10px}
+  .marge-l .m{font-size:26px;font-weight:800;letter-spacing:-.5px}
+  .marge-l .p{font-size:16px;font-weight:700}
+  .m-ok{color:var(--vert)} .m-moyen{color:var(--orange)} .m-non{color:var(--rouge)}
+  .ad-m{font-size:18px;font-weight:800}
+  .note-ads{font-size:12px;color:var(--doux);margin:2px 0 10px}
+  /* Analyse & Plan — gros, lisible en un coup d'œil */
+  .mois-c{display:grid;grid-template-columns:1fr auto;gap:2px 10px;padding:12px 0;border-bottom:1px solid var(--bord)}
+  .mois-c:last-child{border-bottom:0}
+  .mois-c .t{font-size:17px;font-weight:800}
+  .mois-c .b{font-size:22px;font-weight:800;text-align:right}
+  .mois-c .d{grid-column:1 / -1;font-size:13px;color:var(--doux)}
+  .graphe{width:100%;height:auto;display:block;margin:6px 0 4px}
+  .leg{display:flex;gap:14px;font-size:12px;color:var(--doux);margin-bottom:6px;flex-wrap:wrap}
+  .leg i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+  .obj-gros{font-size:34px;font-weight:800;letter-spacing:-1px;text-align:center}
+  .obj-lib{text-align:center;color:var(--doux);font-size:13px;margin-bottom:12px}
+  .barre{height:14px;border-radius:7px;background:var(--carte2);overflow:hidden;margin:6px 0}
+  .barre > div{height:100%;border-radius:7px;background:linear-gradient(90deg,var(--accent),var(--vert))}
+  .echelle{display:flex;justify-content:space-between;gap:4px;margin-top:10px}
+  .echelle div{flex:1;text-align:center;padding:8px 0;border-radius:10px;background:var(--carte2);font-weight:800;font-size:14px;color:var(--tres-doux)}
+  .echelle div.atteint{background:var(--vert-fond);color:var(--vert)}
+  .echelle div.prochain{outline:2px solid var(--accent);color:var(--texte)}
+  .stats3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
+  .stats3 div{background:var(--carte2);border-radius:12px;padding:10px 6px;text-align:center}
+  .stats3 b{display:block;font-size:20px;font-weight:800}
+  .stats3 small{color:var(--doux);font-size:11px}
+  .todo-tete{display:flex;justify-content:space-between;align-items:baseline;margin:6px 0}
+  .todo-tete b{font-size:16px}
+  .tache{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--bord);font-size:16px}
+  .tache input{width:24px;height:24px;flex:0 0 24px;accent-color:var(--vert)}
+  .tache span{flex:1;min-width:0;word-break:break-word}
+  .tache.faite span{color:var(--tres-doux);text-decoration:line-through}
+  .tache button{background:none;border:0;color:var(--tres-doux);font-size:20px;padding:0 4px}
+  .tache .qui{font-size:11px;font-weight:700;color:var(--accent);border:1px solid var(--accent);border-radius:6px;padding:1px 6px;flex:0 0 auto}
+  .ajout{display:flex;gap:8px;margin-top:12px}
+  .ajout input{flex:1;min-width:0;font-size:16px;padding:12px;border-radius:12px;border:1px solid var(--bord);background:var(--carte2);color:var(--texte)}
+  .ajout button{font-size:16px;font-weight:700;padding:0 16px;border-radius:12px;border:0;background:var(--accent);color:#111}
+  .prev-j{display:flex;justify-content:space-between;align-items:baseline;padding:10px 0;border-bottom:1px solid var(--bord);gap:10px}
+  .prev-j .q{font-weight:800;font-size:15px;flex:0 0 74px}
+  .prev-j .l{flex:1;min-width:0;font-size:13px;color:var(--doux)}
+  .prev-j .m{font-weight:800;font-size:16px;white-space:nowrap}
+  .pastille-thb{display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--rouge);vertical-align:0}
   .hero.encours{border-color:var(--doux)} .hero.encours .verdict{color:var(--texte)}
   .profit{font-size:44px;font-weight:800;letter-spacing:-2px;margin:6px 0 2px;
           font-variant-numeric:tabular-nums}
@@ -250,11 +293,15 @@
     <button data-p="0" class="actif">Compta</button>
     <button data-p="1">Ads</button>
     <button data-p="2">Météo</button>
+    <button data-p="3">Analyse</button>
+    <button data-p="4">Plan</button>
   </div>
   <div class="pages" id="pages">
     <div class="page" id="page-compta"></div>
     <div class="page" id="page-ads"></div>
     <div class="page" id="page-argent"></div>
+    <div class="page" id="page-analyse"></div>
+    <div class="page" id="page-plan"></div>
   </div>
   <div id="alerte-remb"></div>
 
@@ -336,6 +383,33 @@
   </section>
 
   <section>
+    <h2>Bénéf <span>mois par mois · abonnements, Shopify, VA déduits · sans THB</span></h2>
+    <div id="an-graph-mois"></div>
+    <div id="an-mois"></div>
+  </section>
+
+  <section>
+    <h2>Semaine par semaine <span>CA, pub, bénéf, créas lancées</span></h2>
+    <div id="an-graph-sem"></div>
+    <div id="an-sem"></div>
+  </section>
+
+  <section>
+    <h2>To-do <span>moi · Claude</span></h2>
+    <div id="pl-todo"></div>
+  </section>
+
+  <section>
+    <h2>Objectif <span>CA par jour</span></h2>
+    <div id="pl-obj"></div>
+  </section>
+
+  <section>
+    <h2>Les 14 prochains jours <span>ce qui va sortir</span></h2>
+    <div id="pl-prev"></div>
+  </section>
+
+  <section>
     <h2>Réserve <span>minimum à garder</span></h2>
     <div id="reserve"></div>
   </section>
@@ -409,10 +483,11 @@ const PERIODES = [
    Un jour sans vente reste un jour : sans ça, « aujourd'hui » désignerait
    le dernier jour qui a vendu — donc hier, ou avant-hier. */
 function toutesLesDates() {
-  const connues = [...new Set([...Object.keys(D.jours || {}),
-                               ...Object.keys(D.spend || {})])].sort();
-  if (!connues.length) return [];
   const auj = new Date().toLocaleDateString("en-CA", { timeZone: "America/Chicago" });
+  // jamais une date après aujourd'hui : Triple Whale renvoyait « demain » à 0 (17/11)
+  const connues = [...new Set([...Object.keys(D.jours || {}),
+                               ...Object.keys(D.spend || {})])].filter(d => d <= auj).sort();
+  if (!connues.length) return [];
   const derniere = connues[connues.length - 1];
   const fin = auj > derniere ? auj : derniere;
   const out = [];
@@ -570,6 +645,8 @@ function rendre() {
   rendreAbos();
   rendreRemb(dates);
   rendreArgent();
+  rendreAnalyse();
+  rendrePlan();
 }
 
 /* ── Météo (trésorerie) : réserve et versement mensuel ──
@@ -713,7 +790,8 @@ function rendreCalendrier() {
       const iso = `${CAL_AN}-${String(CAL_MOIS + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
       const j = (D.jours || {})[iso] || {};
       const actif = (j.ca || 0) + (j.n || 0) + ((D.spend || {})[iso] || 0);
-      let cl = actif > 0 ? { ok: "a", moyen: "b", non: "c" }[classe(agreger([iso]))] : "";
+      const tt = toutesLesDates(), estAuj = iso === tt[tt.length - 1];   // journée en cours : pas de couleur
+      let cl = actif > 0 && !estAuj ? { ok: "a", moyen: "b", non: "c" }[classe(agreger([iso]))] : "";
       const hi = sb || sa;
       if (sa && iso >= sa && iso <= hi) cl += " dans";
       if (iso === sa || iso === sb) cl += " bout";
@@ -794,6 +872,21 @@ const lig = (g, d) =>
 
 /* Un bloc de chiffres par campagne : le jour où il y en aura plusieurs,
    on saura tout de suite à laquelle chaque résultat appartient. */
+/* Marge d'une campagne ou d'une créa : ventes attribuées par Triple Whale − pub − coût produits
+   et frais au taux de la période (coût produits + frais ÷ CA). Estimée : Shopify ne dit pas
+   quelle créa a fait quelle vente. */
+function tauxCouts(dates) {
+  const a = agreger(dates);
+  return a.ca ? (a.cogs + a.frais) / a.ca : 0;
+}
+function margeDe(v, taux) {
+  const m = v.va - v.sp - v.va * taux;
+  const p = v.va ? m / v.va : (v.sp ? -1 : 0);
+  const cl = m < 0 ? "m-non" : p < (D.seuils?.marge_ok ?? 0.15) ? "m-moyen" : "m-ok";
+  return { m, p, cl };
+}
+const signe = n => (n >= 0 ? "+" : "") + eur(n).replace("−", "−");
+
 function rendreMeta(a, dates) {
   const par = {};
   for (const d of dates) for (const ad of ((D.ads || {})[d] || [])) {
@@ -806,12 +899,16 @@ function rendreMeta(a, dates) {
     $("#meta").innerHTML = `<div class="vide-msg">Pas encore de données par campagne.</div>`;
     return;
   }
-  $("#meta").innerHTML = liste.map(([nom, v]) => `
+  const taux = tauxCouts(dates);
+  $("#meta").innerHTML = `<div class="note-ads">Marge = ventes Triple Whale − pub − produits et frais (${pct(taux)} du CA sur la période)</div>`
+    + liste.map(([nom, v]) => { const g = margeDe(v, taux); return `
     <div class="camp-bloc">
       <div class="camp-tete">
         <div class="nom">${echap(nom)}</div>
         <div class="sp">${eur2(v.sp)}</div>
       </div>
+      <div class="marge-l"><div class="m ${g.cl}">${signe(g.m)}</div>
+        <div class="p ${g.cl}">marge ${v.va ? pct(g.p) : "—"} · ${Math.round(v.cv)} vente${v.cv >= 2 ? "s" : ""}</div></div>
       <div class="grille2">
         <div class="kpi"><div class="lib">ROAS</div>
           <div class="val">${v.sp ? num(v.va / v.sp) : "—"}</div></div>
@@ -822,7 +919,7 @@ function rendreMeta(a, dates) {
         <div class="kpi"><div class="lib">CPM</div>
           <div class="val">${v.im ? eur2(v.sp / v.im * 1000) : "—"}</div></div>
       </div>
-    </div>`).join("");
+    </div>`; }).join("");
 }
 
 function rendreAds(dates) {
@@ -834,14 +931,16 @@ function rendreAds(dates) {
     for (const c of ["sp", "cv", "va", "im", "cl"]) par[k][c] += ad[c] || 0;
   }
   const liste = Object.values(par).sort((x, y) => y.sp - x.sp).slice(0, 10);
-  $("#ads").innerHTML = liste.length ? liste.map(a => `
+  const taux = tauxCouts(dates);
+  $("#ads").innerHTML = liste.length ? liste.map(a => { const g = margeDe(a, taux); return `
     <div class="ligne">
       <div class="nom"><div class="t">${echap(a.nom)}</div>
         <small>${echap(a.set)}</small>
         <small class="camp">${echap(a.camp)}</small></div>
-      <div class="chiffres"><b>${eur2(a.sp)}</b>
+      <div class="chiffres"><div class="ad-m ${g.cl}">${signe(g.m)}</div>
+        <small><b>${eur2(a.sp)}</b> dépensés · ${Math.round(a.cv)} vente${a.cv >= 2 ? "s" : ""}</small>
         <small>ROAS ${a.sp ? num(a.va / a.sp) : "—"} · CPA ${a.cv ? eur2(a.sp / a.cv) : "—"}</small></div>
-    </div>`).join("") : `<div class="vide-msg">Aucune diffusion sur la période.</div>`;
+    </div>`; }).join("") : `<div class="vide-msg">Aucune diffusion sur la période.</div>`;
 }
 
 function rendrePays(dates) {
@@ -903,6 +1002,166 @@ function rendreAbos() {
   $("#abos").innerHTML = mens + hebdo +
     l("Salaire VA", "aux dates où tu la payes", 0).replace("$0.00", "réel") +
     `<div class="ligne"><div class="nom"><div class="t"><b>Total mensuel</b></div></div><div class="chiffres"><b>${eur2(totMens)}</b></div></div>`;
+}
+
+/* ═════════ Analyse (vue macro) ═════════ */
+const ddmm = iso => iso.slice(8, 10) + "/" + iso.slice(5, 7);
+function joursFinis() { const t = toutesLesDates(); return t.slice(0, -1); }   // aujourd'hui exclu
+function lundiDe(iso) {
+  const d = new Date(iso + "T12:00:00Z"); d.setUTCDate(d.getUTCDate() - ((d.getUTCDay() + 6) % 7));
+  return d.toISOString().slice(0, 10);
+}
+const MOIS3 = ["janv.", "févr.", "mars", "avr.", "mai", "juin", "juil.", "août", "sept.", "oct.", "nov.", "déc."];
+const maj1 = t => t.charAt(0).toUpperCase() + t.slice(1);
+function grapheBarres(vals, etiq, couleur) {   // barres avec la valeur écrite au-dessus
+  const L = 340, H = 175, n = vals.length || 1, lg = L / n;
+  const max = Math.max(...vals, 0), min = Math.min(...vals, 0), et = (max - min) || 1;
+  const y = v => 22 + (max - v) / et * (H - 70);
+  let h = `<line x1="0" x2="${L}" y1="${y(0)}" y2="${y(0)}" stroke="var(--tres-doux)" stroke-dasharray="3 3"/>`;
+  vals.forEach((v, i) => {
+    const x = i * lg + lg * .18, w = lg * .64, y0 = y(0), yv = y(v);
+    h += `<rect x="${x}" y="${Math.min(y0, yv)}" width="${w}" height="${Math.max(Math.abs(yv - y0), 2)}" rx="4" fill="${couleur(v)}"/>`;
+    h += `<text x="${x + w / 2}" y="${v >= 0 ? yv - 5 : yv + 14}" text-anchor="middle" font-size="11" font-weight="700" fill="var(--texte)">${Math.round(v).toLocaleString("fr-FR")}</text>`;
+    h += `<text x="${x + w / 2}" y="${H - 4}" text-anchor="middle" font-size="12" fill="var(--doux)">${etiq[i]}</text>`;
+  });
+  return `<svg class="graphe" viewBox="0 0 ${L} ${H}">${h}</svg>`;
+}
+function grapheSemaines(sem) {   // CA et pub en lignes, bénéf en barres
+  const L = 340, H = 170, n = sem.length || 1, lg = L / n;
+  const tous = sem.flatMap(w => [w.a.ca, w.a.spend, w.a.net]);
+  const max = Math.max(...tous, 0), min = Math.min(...tous, 0), et = (max - min) || 1;
+  const y = v => 10 + (max - v) / et * (H - 34), cx = i => i * lg + lg / 2;
+  const ligne = k => sem.map((w, i) => `${i ? "L" : "M"}${cx(i)},${y(w.a[k])}`).join("");
+  let h = `<line x1="0" x2="${L}" y1="${y(0)}" y2="${y(0)}" stroke="var(--tres-doux)" stroke-dasharray="3 3"/>`;
+  sem.forEach((w, i) => {
+    const v = w.a.net, y0 = y(0), yv = y(v);
+    h += `<rect x="${cx(i) - lg * .3}" y="${Math.min(y0, yv)}" width="${lg * .6}" height="${Math.max(Math.abs(yv - y0), 2)}" rx="3" fill="${v < 0 ? "var(--rouge)" : "var(--vert)"}" opacity=".85"/>`;
+    if ((n - 1 - i) % 2 === 0) h += `<text x="${cx(i)}" y="${H - 3}" text-anchor="middle" font-size="11" fill="var(--doux)">${ddmm(w.lundi)}</text>`;
+  });
+  h += `<path d="${ligne("ca")}" fill="none" stroke="var(--accent)" stroke-width="2.5"/>`;
+  h += `<path d="${ligne("spend")}" fill="none" stroke="var(--orange)" stroke-width="2.5"/>`;
+  return `<div class="leg"><span><i style="background:var(--accent)"></i>CA</span><span><i style="background:var(--orange)"></i>Pub</span><span><i style="background:var(--vert)"></i>Bénéf</span></div><svg class="graphe" viewBox="0 0 ${L} ${H}">${h}</svg>`;
+}
+function rendreAnalyse() {
+  if (!$("#an-mois")) return;
+  const finis = joursFinis();
+  // Mois
+  const mois = [...new Set(finis.map(d => d.slice(0, 7)))].filter(m => m >= "2026-07");
+  const am = mois.map(m => ({ m, a: agreger(finis.filter(d => d.startsWith(m))) }));
+  const nomM = m => MOIS[+m.slice(5, 7) - 1];
+  $("#an-graph-mois").innerHTML = grapheBarres(am.map(x => x.a.net), am.map(x => MOIS3[+x.m.slice(5, 7) - 1]),
+    v => v < 0 ? "var(--rouge)" : "var(--vert)");
+  $("#an-mois").innerHTML = am.slice().reverse().map(({ m, a }) => `
+    <div class="mois-c"><div class="t">${maj1(nomM(m))} ${m.slice(0, 4)}${m < DEBUT_FIXES.slice(0, 7) ? ` <small style="color:var(--doux);font-weight:400">sans abonnements</small>` : ""}</div>
+      <div class="b ${a.net < 0 ? "m-non" : "m-ok"}">${signe(a.net)}</div>
+      <div class="d">CA <b>${eur(a.ca)}</b> · pub ${eur(a.spend)} · ROAS <b>${a.roas ? num(a.roas) : "—"}</b> · marge <b>${pct(a.marge)}</b> · ${a.n} cmd</div></div>`).join("");
+  // Semaines (12 dernières), créas lancées = première diffusion d'une créa dans la semaine
+  const lundis = [...new Set(finis.map(lundiDe))].slice(-12);
+  const premiere = {};
+  for (const d of Object.keys(D.ads || {}).sort()) for (const ad of D.ads[d]) {
+    const k = ad.nom + "|" + (ad.camp || ""); if (!premiere[k] && (ad.sp || 0) > 0) premiere[k] = d;
+  }
+  const premAds = Object.keys(D.ads || {}).sort()[0] || "9999";
+  const sem = lundis.map(l => {
+    const ds = finis.filter(d => lundiDe(d) === l);
+    const lance = Object.values(premiere).filter(d => lundiDe(d) === l).length;
+    return { lundi: l, a: agreger(ds), lance: l > premAds ? lance : null, nb: ds.length };
+  });
+  $("#an-graph-sem").innerHTML = grapheSemaines(sem);
+  $("#an-sem").innerHTML = sem.slice().reverse().map(w => `
+    <div class="mois-c"><div class="t">Semaine du ${ddmm(w.lundi)}${w.nb < 7 ? ` <small style="color:var(--doux);font-weight:400">(${w.nb} j)</small>` : ""}</div>
+      <div class="b ${w.a.net < 0 ? "m-non" : "m-ok"}">${signe(w.a.net)}</div>
+      <div class="d">CA <b>${eur(w.a.ca)}</b> · pub ${eur(w.a.spend)} · ROAS <b>${w.a.roas ? num(w.a.roas) : "—"}</b> · marge <b>${pct(w.a.marge)}</b>${w.lance !== null ? ` · <b>${w.lance}</b> créa${w.lance > 1 ? "s" : ""} lancée${w.lance > 1 ? "s" : ""}` : ""}</div></div>`).join("");
+}
+
+/* ═════════ Plan : to-do, objectif, prévisionnel ═════════ */
+const ROBOT = "https://collecteur.relais-brume-90312.workers.dev/";
+async function tache(q) {
+  try {
+    const r = await fetch(ROBOT + "?tache=1", { method: "POST", headers: { "x-jeton": localStorage.getItem("j") || "" },
+                                                 body: JSON.stringify(q), cache: "no-store" });
+    if (!r.ok) throw new Error(await r.text());
+    D.taches = await r.json(); rendrePlan();
+  } catch (e) { flash("To-do non enregistrée : " + (e.message || e), true); }
+}
+function rendreTodo() {
+  const t = (D.taches || []);
+  const ilya7 = new Date(Date.now() - 7 * 864e5).toISOString().slice(0, 10);
+  const vis = t.filter(x => !x.fait || x.jour >= ilya7);
+  const bloc = qui => {
+    const l = vis.filter(x => x.qui === qui), f = l.filter(x => x.fait).length;
+    return `<div class="todo-tete"><b>${qui === "moi" ? "Moi" : "Claude"}</b><span style="color:var(--doux)">${f} / ${l.length} fait${f > 1 ? "s" : ""}</span></div>
+      <div class="barre"><div style="width:${l.length ? f / l.length * 100 : 0}%"></div></div>
+      ${l.map(x => `<div class="tache ${x.fait ? "faite" : ""}"><input type="checkbox" data-id="${x.id}" ${x.fait ? "checked" : ""}>
+        <span>${echap(x.texte)}</span><button data-suppr="${x.id}" title="Supprimer">×</button></div>`).join("")
+        || `<div class="vide-msg">Rien pour l'instant.</div>`}`;
+  };
+  $("#pl-todo").innerHTML = bloc("moi") +
+    `<div class="ajout"><input id="todo-txt" placeholder="Ajouter une tâche…" maxlength="300"><button id="todo-add">Ajouter</button></div>
+     <div style="height:18px"></div>` + bloc("claude");
+  const ajouter = () => { const v = $("#todo-txt").value.trim(); if (v) tache({ action: "ajout", qui: "moi", texte: v,
+    jour: new Date().toLocaleDateString("en-CA") }); };
+  $("#todo-add").onclick = ajouter;
+  $("#todo-txt").onkeydown = e => { if (e.key === "Enter") ajouter(); };
+  $("#pl-todo").querySelectorAll("input[data-id]").forEach(c => c.onchange = () => tache({ action: "coche", id: c.dataset.id, fait: c.checked }));
+  $("#pl-todo").querySelectorAll("button[data-suppr]").forEach(b => b.onclick = () => { if (confirm("Supprimer cette tâche ?")) tache({ action: "suppr", id: b.dataset.suppr }); });
+}
+function rendreObjectif() {
+  const finis = joursFinis(), d7 = finis.slice(-7), a7 = agreger(d7);
+  const caJour = d7.length ? a7.ca / d7.length : 0;
+  const paliers = [1, 3, 6, 12, 25, 50, 100];   // KD = 1 000 $ de CA par jour
+  const prochain = paliers.find(p => caJour < p * 1000) || 100;
+  const prec = paliers[paliers.indexOf(prochain) - 1] || 0;
+  const prog = Math.min(1, (caJour - prec * 1000) / ((prochain - prec) * 1000));
+  let serie = 0; for (let i = finis.length - 1; i >= 0; i--) { if (agreger([finis[i]]).profit >= 0) serie++; else break; }
+  let rec = { ca: 0, d: "" }; for (const d of finis) { const c = ((D.jours || {})[d] || {}).ca || 0; if (c > rec.ca) rec = { ca: c, d }; }
+  const t = toutesLesDates(), der = t[t.length - 1] || "", mois = agreger(t.filter(x => x.slice(0, 7) === der.slice(0, 7)));
+  $("#pl-obj").innerHTML = `
+    <div class="obj-gros">${eur(caJour)} <small style="font-size:16px;color:var(--doux)">/ jour</small></div>
+    <div class="obj-lib">moyenne des 7 derniers jours · prochain palier <b style="color:var(--texte)">${prochain} KD</b> = ${eur(prochain * 1000)} / jour</div>
+    <div class="barre"><div style="width:${(prog * 100).toFixed(1)}%"></div></div>
+    <div class="obj-lib">encore <b style="color:var(--texte)">${eur(Math.max(0, prochain * 1000 - caJour))}</b> par jour pour y être</div>
+    <div class="echelle">${paliers.map(p => `<div class="${caJour >= p * 1000 ? "atteint" : p === prochain ? "prochain" : ""}">${p}</div>`).join("")}</div>
+    <div class="obj-lib" style="margin-top:4px">paliers en KD (milliers de $ de CA par jour) — 12 KD visé au 30/11</div>
+    <div class="stats3">
+      <div><b class="${mois.net < 0 ? "m-non" : "m-ok"}">${signe(mois.net)}</b><small>bénéf de ${MOIS[+der.slice(5, 7) - 1] || ""}</small></div>
+      <div><b>${serie}</b><small>jour${serie > 1 ? "s" : ""} rentable${serie > 1 ? "s" : ""} d'affilée</small></div>
+      <div><b>${eur(rec.ca)}</b><small>record CA · ${rec.d ? ddmm(rec.d) : "—"}</small></div>
+    </div>`;
+}
+function rendrePrevision() {
+  const t = toutesLesDates(), auj = t[t.length - 1]; if (!auj) return;
+  const finis = joursFinis(), d7 = finis.slice(-7), a7 = agreger(d7);
+  const judy = d7.length ? a7.cogs : 0;   // une semaine de coût produits ≈ un paiement Judy
+  let h = "", d = new Date(auj + "T12:00:00Z"), total = 0;
+  for (let i = 0; i < 14; i++) {
+    const iso = d.toISOString().slice(0, 10), js = d.getUTCDay();
+    const l = abosDuJour(iso).map(a => ({ nom: a.nom, m: a.montant }));
+    if (js === 5) l.push({ nom: "Judy ≈", m: judy });
+    const thb = d.getUTCDate() === 25;
+    if (l.length || thb) {
+      const s = l.reduce((x, a) => x + a.m, 0); total += s;
+      h += `<div class="prev-j"><div class="q">${["dim.", "lun.", "mar.", "mer.", "jeu.", "ven.", "sam."][js]} ${ddmm(iso)}</div>
+        <div class="l">${thb ? '<span class="pastille-thb"></span> THB ' : ""}${l.map(a => a.nom).join(" · ")}</div>
+        <div class="m">${s ? eur(s) : ""}</div></div>`;
+    }
+    d.setUTCDate(d.getUTCDate() + 1);
+  }
+  // Projection du bénéf de fin de mois au rythme des 7 derniers jours
+  const ym = auj.slice(0, 7), dm = t.filter(x => x.slice(0, 7) === ym && x < auj);
+  const deja = agreger(dm).net, rythme = d7.length ? a7.contribution / d7.length : 0;
+  const fin = new Date(Date.UTC(+ym.slice(0, 4), +ym.slice(5, 7), 0)).getUTCDate();
+  let reste = 0, fixesReste = 0;
+  for (let j = +auj.slice(8, 10); j <= fin; j++) { reste++; fixesReste += fixesJour(ym + "-" + String(j).padStart(2, "0")); }
+  const proj = deja + rythme * reste - fixesReste;
+  $("#pl-prev").innerHTML = (h || `<div class="vide-msg">Rien de prévu.</div>`) +
+    `<div class="prev-j"><div class="q">Total</div><div class="l">hors THB · Judy estimée sur la dernière semaine</div><div class="m">${eur(total)}</div></div>
+     <div class="obj-lib" style="margin-top:14px">bénéf de ${MOIS[+ym.slice(5, 7) - 1]} si le rythme des 7 derniers jours continue</div>
+     <div class="obj-gros ${proj < 0 ? "m-non" : "m-ok"}" style="font-size:28px">${signe(proj)}</div>`;
+}
+function rendrePlan() {
+  if (!$("#pl-todo")) return;
+  rendreTodo(); rendreObjectif(); rendrePrevision();
 }
 
 function rendreRemb(dates) {
@@ -1046,6 +1305,8 @@ function organiserPages() {
    sec("graph"), sec("cal"), sec("detail"), sec("abos")].forEach(el => { if (el) pc.appendChild(el); });
   [sec("cal2"), sec("meta"), sec("ads"), sec("pays"), sec("produits")].forEach(el => { if (el) pa.appendChild(el); });
   [sec("reserve"), sec("salaire"), sec("regles")].forEach(el => { if (el) pm.appendChild(el); });
+  [sec("an-mois"), sec("an-sem")].forEach(el => { if (el) $("#page-analyse").appendChild(el); });
+  [sec("pl-todo"), sec("pl-obj"), sec("pl-prev")].forEach(el => { if (el) $("#page-plan").appendChild(el); });
   const btns = $("#onglets").querySelectorAll("button");
   btns.forEach(b => b.onclick = () => pages.scrollTo({ left: (+b.dataset.p) * pages.clientWidth, behavior: "smooth" }));
   pages.addEventListener("scroll", () => {
