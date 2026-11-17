@@ -540,7 +540,8 @@ const JSEM = ["L", "M", "M", "J", "V", "S", "D"];
 const MOIS = ["janvier", "février", "mars", "avril", "mai", "juin", "juillet",
               "août", "septembre", "octobre", "novembre", "décembre"];
 
-let D = null, PERIODE = 7, SEL_A = null, SEL_B = null, SEL_ADS = null, CAL_AN = null, CAL_MOIS = null;
+let OUVERTURE = true;   // première ouverture (ou retour après une longue pause) → To-do + aujourd'hui
+let D = null, PERIODE = 1, SEL_A = null, SEL_B = null, SEL_ADS = null, CAL_AN = null, CAL_MOIS = null;
 
 const PERIODES = [
   { l: "Auj.", j: 1 }, { l: "3 j", j: 3 }, { l: "7 j", j: 7 },
@@ -1214,7 +1215,7 @@ function rendreAnalyse() {
       ${k("Marge", `<span class="${a.marge < 0 ? "m-non" : a.marge < 0.15 ? "m-moyen" : "m-ok"}">${pct(a.marge)}</span>`, "avant abonnements")}
     </div>
     <section><h2>💰 Bénéf par ${nomG}</h2>${grapheBarres(L.map(p => p.a.net), L.map(p => p.lab), couleurNet)}</section>
-    <section><h2>📊 CA et pub par ${nomG} <span>en $</span></h2>${grapheLignes([{ nom: "CA", c: "#ff7a00", v: L.map(p => p.a.ca), aire: true }, { nom: "Pub", c: "#9b9b9b", v: L.map(p => p.a.spend) }], L.map(p => p.lab))}</section>
+    <section><h2>📊 CA et pub par ${nomG} <span>en $</span></h2>${grapheLignes([{ nom: "CA", c: "#ff7a00", v: L.map(p => p.a.ca), aire: true }, { nom: "Pub dépensée (Meta + Pinterest)", c: "#9b9b9b", v: L.map(p => p.a.spend) }], L.map(p => p.lab))}</section>
     <section><h2>🎯 Marge par ${nomG}</h2>${grapheLignes([{ nom: "Marge", c: "#34d399", v: L.map(p => p.a.marge), aire: true }], L.map(p => p.lab),
       [{ v: D.seuils?.marge_ok ?? 0.15, c: "#ff7a00", nom: "bonne journée 15 %" }, { v: 0, c: "#ff5a5a", nom: "rentable 0 %" }], v => Math.round(v * 100) + " %")}</section>
     ${lances.some(x => x !== null) ? `<section><h2>🚀 Créas lancées par ${nomG}</h2>${grapheBarres(lances.map(x => x || 0), L.map(p => p.lab), () => "#ff7a00", v => String(v))}</section>` : ""}
@@ -1291,7 +1292,7 @@ function rendreTodo() {
       <div class="ajout" style="margin-top:4px"><textarea id="todo-txt" class="todo-txt" rows="1" maxlength="300" placeholder="${{ moi: "Nouvelle tâche…", idee: "Une idée…", note: "Une note…", lien: "Colle un lien…" }[TD.type]}"></textarea><button id="todo-add" style="height:48px">Ajouter</button></div></div>
     ${carte("✅ À faire · " + nomJ, aFaire, "Rien. Ajoute ta première tâche 👆")}
     ${faites.length ? `<button class="faites-tog" id="td-faites">${TD.faites ? "▾" : "▸"} ${faites.length} faite${faites.length > 1 ? "s" : ""}</button>${TD.faites ? carte("Faites", faites, "") : ""}` : ""}
-    ${carte("🤖 Claude s'en occupe", claude, "Rien en cours.")}
+    ${carte("🧠 Claude te conseille", claude, "Pas de conseil en attente.")}
     ${carte("💡 Idées", T.filter(x => x.qui === "idee"), "Note tes idées ici.")}
     ${carte("📝 Notes", T.filter(x => x.qui === "note"), "Rien pour l'instant.")}
     ${carte("🔗 Liens", T.filter(x => x.qui === "lien"), "Garde tes liens utiles ici.")}`;
@@ -1429,9 +1430,10 @@ async function entrer(jeton, mdp, silencieux) {
     localStorage.setItem("m", mdp);
     $("#connexion").classList.add("cache");
     $("#tableau").classList.remove("cache");
+    if (OUVERTURE) { PERIODE = 1; SEL_ADS = null; }   // Compta et Ads s'ouvrent sur aujourd'hui
     SEL_A = null; SEL_B = null; CAL_AN = null; CAL_MOIS = null;
     construirePeriodes(); rendreMaj(); rendre();
-    if (!silencieux && window.ouvrirTodo) ouvrirTodo();   // l'app s'ouvre sur la To-do
+    if (OUVERTURE && window.ouvrirTodo) { OUVERTURE = false; ouvrirTodo(); }   // l'app s'ouvre sur la To-do
   } catch (e) {
     const msg = /operation-specific|OperationError|decrypt/i.test(String(e))
       ? "Mot de passe incorrect." : (e.message || "Échec.");
@@ -1497,6 +1499,17 @@ $("#btn-oublier").onclick = () => {
     entrer(j, m, true).finally(() => { const s = document.getElementById("splash"); if (s) s.remove(); });
   }
 })();
+
+// Retour dans l'app après plus de 10 min : on rouvre sur la To-do, et Compta/Ads sur aujourd'hui.
+let CACHEE_DEPUIS = 0;
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "hidden") { CACHEE_DEPUIS = Date.now(); return; }
+  if (CACHEE_DEPUIS && Date.now() - CACHEE_DEPUIS > 10 * 60000) {
+    OUVERTURE = true;
+    const j = localStorage.getItem("j"), m = localStorage.getItem("m");
+    if (j && m) entrer(j, m, true);
+  }
+});
 
 // Rafraîchit tout seul chaque minute tant que l'app est ouverte et visible :
 // la pastille reste le reflet en direct de l'état du robot, et les chiffres suivent.
