@@ -146,6 +146,7 @@
   .cal .case.bout{outline:2px solid var(--accent);outline-offset:1px}
   .cal .case{position:relative}
   .cal .case .abo-dot{position:absolute;top:4px;right:4px;width:6px;height:6px;border-radius:50%;background:var(--orange)}
+  .cal .case .thb-dot{position:absolute;top:4px;left:4px;width:6px;height:6px;border-radius:50%;background:var(--rouge)}
   .detail-jour{margin-top:13px;padding-top:13px;border-top:1px solid var(--bord);font-size:14px}
   .detail-jour .titre{font-weight:700;margin-bottom:4px}
   .detail-jour .consigne{font-size:11px;color:var(--tres-doux);margin-bottom:9px}
@@ -431,32 +432,31 @@ function fenetre(nbJours, decalage = 0) {
   return t.slice(Math.max(0, fin - nbJours), Math.max(0, fin));
 }
 
-// ── Abonnements (coûts fixes) — calculés ICI, dans l'app. Changer une valeur = instantané. ──
+// ── Coûts fixes BUSINESS (abonnements, Shopify, VA, frais de virement Judy, frais Slash) ──
+// Jusqu'à FIXES_JUSQUA : montants et dates RÉELS, lus sur Slash le 17/11/2026 (compta/fixes_app.py).
+// Après : la liste ABOS ci-dessous (dernier montant prélevé). Jamais le THB : ce n'est pas du business.
 const DEBUT_FIXES = "2026-08-01";
-const ABOS = [   // secours seulement (17/11/2026, recopié de compta/bareme.py)
-  { nom: "Higgsfield",   jour: 18, montant: 49 },
-  { nom: "Triple Whale", jour: 29, montant: 220 },
-  { nom: "Claude",       jour: 23, montant: 200 },
-  { nom: "Fundree",      jour: 23, montant: 282 },
+const FIXES_JUSQUA = "2026-11-17";
+const FIXES_REELS = {"2026-08-02": [["eDesk", 140.0], ["TrendTrack", 89.0]], "2026-08-03": [["Salaire VA", 100.0], ["Frais Slash", 1.4], ["Frais virement Judy", 25.0]], "2026-08-04": [["Frais Slash", 0.89], ["Shopify", 60.03]], "2026-08-05": [["Kie", 50.0]], "2026-08-06": [["Frais virement Judy", 25.0], ["VMake", 9.99]], "2026-08-07": [["Frais Slash", 0.4]], "2026-08-10": [["Salaire VA", 100.0]], "2026-08-11": [["Frais virement Judy", 25.0]], "2026-08-14": [["Frais virement Judy", 25.0]], "2026-08-15": [["Shopify", 10.95]], "2026-08-17": [["Salaire VA", 100.0]], "2026-08-18": [["Frais virement Judy", 25.0], ["Higgsfield", 49.0]], "2026-08-20": [["Frais virement Judy", 25.0]], "2026-08-23": [["Claude", 200.0]], "2026-08-24": [["Salaire VA", 100.0], ["Frais virement Judy", 25.0]], "2026-08-25": [["Fundree", 292.8]], "2026-08-26": [["Frais Slash", 2.92]], "2026-08-27": [["Frais virement Judy", 25.0]], "2026-08-29": [["Triple Whale", 220.15]], "2026-08-31": [["Frais virement Judy", 25.0], ["Salaire VA", 100.0]], "2026-09-02": [["Shopify", 83.48], ["TrendTrack", 89.0], ["eDesk", 140.0]], "2026-09-03": [["Frais Slash", 0.89], ["Frais virement Judy", 25.0]], "2026-09-04": [["Frais Slash", 1.4]], "2026-09-06": [["VMake", 9.99], ["Kie", 50.0]], "2026-09-07": [["Frais Slash", 0.4]], "2026-09-08": [["Frais virement Judy", 25.0], ["Salaire VA", 100.0]], "2026-09-11": [["Frais virement Judy", 25.0]], "2026-09-14": [["Salaire VA", 100.0], ["Shopify", 25.0], ["Frais virement Judy", 25.0]], "2026-09-17": [["Frais virement Judy", 25.0]], "2026-09-18": [["Higgsfield", 49.0]], "2026-09-21": [["Salaire VA", 100.0]], "2026-09-22": [["Frais virement Judy", 25.0]], "2026-09-23": [["Claude", 200.0]], "2026-09-24": [["Frais virement Judy", 25.0]], "2026-09-27": [["Fundree", 285.33]], "2026-09-29": [["Triple Whale", 220.15], ["Salaire VA", 100.0]], "2026-09-30": [["Frais virement Judy", 25.0]], "2026-10-01": [["Frais Slash", 2.85]], "2026-10-02": [["TrendTrack", 89.0], ["eDesk", 140.0]], "2026-10-03": [["Frais Slash", 0.89]], "2026-10-04": [["Frais Slash", 1.4]], "2026-10-05": [["Frais virement Judy", 25.0], ["Salaire VA", 100.0]], "2026-10-06": [["VMake", 9.99]], "2026-10-07": [["Frais Slash", 0.4]], "2026-10-09": [["Frais virement Judy", 25.0]], "2026-10-13": [["Salaire VA", 100.0]], "2026-10-14": [["Shopify", 184.69]], "2026-10-15": [["Infomaniak", 12.78]], "2026-10-16": [["Frais virement Judy", 25.0], ["Frais Slash", 0.4], ["ChatGPT", 20.9]], "2026-10-19": [["Salaire VA", 100.0], ["Shopify", 1.07]], "2026-10-20": [["Higgsfield", 49.0]], "2026-10-21": [["Frais Slash", 0.8]], "2026-10-23": [["Fundree", 281.43], ["Frais virement Judy", 25.0], ["Claude", 200.0]], "2026-10-24": [["Frais Slash", 2.81]], "2026-10-26": [["Salaire VA", 100.0], ["Infomaniak", 12.81], ["Shopify", 1.07]], "2026-10-27": [["Frais Slash", 0.4]], "2026-10-28": [["Frais Slash", 0.4], ["Shopify", 40.26]], "2026-10-29": [["Triple Whale", 220.15], ["Frais Slash", 0.4]], "2026-10-30": [["Frais virement Judy", 25.0]], "2026-10-31": [["Shopify", 1.0]], "2026-11-03": [["TrendTrack", 89.0]], "2026-11-05": [["Salaire VA", 126.0], ["Frais Slash", 0.89], ["eDesk", 140.0]], "2026-11-06": [["Frais virement Judy", 25.0], ["VMake", 9.99]], "2026-11-07": [["Frais Slash", 1.4]], "2026-11-08": [["Frais Slash", 0.4]], "2026-11-10": [["Infomaniak", 20.47]], "2026-11-11": [["Frais Slash", 0.4]], "2026-11-13": [["Shopify", 513.97]], "2026-11-16": [["Cloudflare", 5.0], ["Frais virement Judy", 25.0], ["Infomaniak", 41.45], ["ChatGPT", 20.69]]};
+const ABOS = [   // à partir du 18/11/2026 — dernier montant lu sur Slash
   { nom: "TrendTrack",   jour: 2,  montant: 89 },
-  { nom: "ChatGPT",      jour: 17, montant: 21 },
-  { nom: "Cloudflare",   jour: 16, montant: 5 },
-  { nom: "eDesk",        jour: 30, montant: 140 },
+  { nom: "eDesk",        jour: 3,  montant: 140 },
   { nom: "VMake",        jour: 7,  montant: 9.99 },
+  { nom: "Shopify",      jour: 13, montant: 513.97 },
+  { nom: "ChatGPT",      jour: 16, montant: 20.69 },
+  { nom: "Cloudflare",   jour: 16, montant: 5 },
+  { nom: "Higgsfield",   jour: 18, montant: 49 },
+  { nom: "Claude",       jour: 23, montant: 200 },
+  { nom: "Fundree",      jour: 23, montant: 281.43 },
+  { nom: "Triple Whale", jour: 29, montant: 220.15 },
 ];
-const ABOS_HEBDO = [ { nom: "Salaire VA", jsem: 1, montant: 98 } ]; // 1 = lundi (getUTCDay)
+const ABOS_HEBDO = [ { nom: "Frais virement Judy", jsem: 5, montant: 25 } ]; // 5 = vendredi (getUTCDay)
 function abosDuJour(iso) {
-  // 17/11/2026 : la liste vient du barème du Mac (D.abos, écrit par la collecte).
-  // ABOS / ABOS_HEBDO ci-dessus ne servent plus qu'en secours si D.abos manque.
-  const src = (D && D.abos) || null;
-  if (iso < (src ? src.debut : DEBUT_FIXES)) return [];
+  if (iso < DEBUT_FIXES) return [];
+  if (iso <= FIXES_JUSQUA) return (FIXES_REELS[iso] || []).map(([nom, montant]) => ({ nom, montant }));
   const dd = new Date(iso + "T12:00:00Z");
   const jm = dd.getUTCDate(), js = dd.getUTCDay();
-  const out = [];
-  for (const a of (src ? src.mensuels : ABOS)) if (a.jour === jm) out.push(a);
-  for (const a of (src ? src.hebdo : ABOS_HEBDO)) if (a.jsem === js) out.push(a);
-  if (src && src.shopify && src.shopify[iso]) out.push({ nom: "Facture Shopify", montant: src.shopify[iso] });
-  return out;
+  return [...ABOS.filter(a => a.jour === jm), ...ABOS_HEBDO.filter(a => a.jsem === js)];
 }
 function fixesJour(iso) { return abosDuJour(iso).reduce((s, a) => s + a.montant, 0); }
 
@@ -512,7 +512,11 @@ function rendre() {
     : c === "moyen" ? "JUSTE À L'ÉQUILIBRE" : "PAS RENTABLE";
   $("#profit").textContent = eur(a.profit);
   $("#sous-profit").innerHTML =
-    `net <b style="color:var(--texte)">${eur(a.net)}</b> <small style="color:var(--doux)">après abonnements</small> · marge ${pct(a.marge)} · ${a.n} cmd`;
+    `net <b style="color:var(--texte)">${eur(a.net)}</b> <small style="color:var(--doux)">après abonnements</small> · marge ${pct(a.marge)} · ${a.n} cmd`
+    + (() => { const t = toutesLesDates(); if (!t.length) return "";
+        const der = t[t.length - 1], m = agreger(t.filter(x => x.slice(0, 7) === der.slice(0, 7)));
+        return `<br>bénéf de ${MOIS[+der.slice(5, 7) - 1]} <b style="color:${m.net >= 0 ? "var(--vert)" : "var(--rouge)"}">${eur(m.net)}</b>`
+          + ` <small style="color:var(--doux)">abonnements, Shopify, VA déduits</small>`; })();
 
   const delta = (v, ref) => {
     if (!ref) return "";
@@ -705,7 +709,8 @@ function rendreCalendrier() {
       const hi = sb || sa;
       if (sa && iso >= sa && iso <= hi) cl += " dans";
       if (iso === sa || iso === sb) cl += " bout";
-      const abo = abosDuJour(iso).length ? '<span class="abo-dot"></span>' : "";
+      const abo = (abosDuJour(iso).length ? '<span class="abo-dot"></span>' : "")
+                + (d === 25 ? '<span class="thb-dot"></span>' : "");   // repère THB, jamais compté
       h += `<div class="case ${cl}" data-d="${iso}">${d}${abo}</div>`;
     }
     return h;
@@ -885,9 +890,10 @@ function rendreAbos() {
   const l = (nom, quand, montant) =>
     `<div class="ligne"><div class="nom"><div class="t">${nom}</div><small>${quand}</small></div><div class="chiffres"><b>${eur2(montant)}</b></div></div>`;
   const mens = [...ABOS].sort((x, y) => x.jour - y.jour).map(a => l(a.nom, "le " + a.jour + " du mois", a.montant)).join("");
-  const hebdo = ABOS_HEBDO.map(a => l(a.nom, "chaque lundi", a.montant)).join("");
+  const hebdo = ABOS_HEBDO.map(a => l(a.nom, "chaque vendredi (paiement Judy)", a.montant)).join("");
   const totMens = ABOS.reduce((s, a) => s + a.montant, 0);
   $("#abos").innerHTML = mens + hebdo +
+    l("Salaire VA", "aux dates où tu la payes", 0).replace("$0.00", "réel") +
     `<div class="ligne"><div class="nom"><div class="t"><b>Total mensuel</b></div></div><div class="chiffres"><b>${eur2(totMens)}</b></div></div>`;
 }
 
