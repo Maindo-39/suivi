@@ -516,7 +516,7 @@ const FIXES_JUSQUA = "2026-11-17";
 const FIXES_REELS = {"2026-08-02": [["eDesk", 140.0], ["TrendTrack", 89.0]], "2026-08-03": [["Salaire VA", 100.0], ["Frais Slash", 1.4], ["Frais virement Judy", 25.0]], "2026-08-04": [["Frais Slash", 0.89], ["Shopify", 60.03]], "2026-08-05": [["Kie", 50.0]], "2026-08-06": [["Frais virement Judy", 25.0], ["VMake", 9.99]], "2026-08-07": [["Frais Slash", 0.4]], "2026-08-10": [["Salaire VA", 100.0]], "2026-08-11": [["Frais virement Judy", 25.0]], "2026-08-14": [["Frais virement Judy", 25.0]], "2026-08-15": [["Shopify", 10.95]], "2026-08-17": [["Salaire VA", 100.0]], "2026-08-18": [["Frais virement Judy", 25.0], ["Higgsfield", 49.0]], "2026-08-20": [["Frais virement Judy", 25.0]], "2026-08-23": [["Claude", 200.0]], "2026-08-24": [["Salaire VA", 100.0], ["Frais virement Judy", 25.0]], "2026-08-25": [["Fundree", 292.8]], "2026-08-26": [["Frais Slash", 2.92]], "2026-08-27": [["Frais virement Judy", 25.0]], "2026-08-29": [["Triple Whale", 220.15]], "2026-08-31": [["Frais virement Judy", 25.0], ["Salaire VA", 100.0]], "2026-09-02": [["Shopify", 83.48], ["TrendTrack", 89.0], ["eDesk", 140.0]], "2026-09-03": [["Frais Slash", 0.89], ["Frais virement Judy", 25.0]], "2026-09-04": [["Frais Slash", 1.4]], "2026-09-06": [["VMake", 9.99], ["Kie", 50.0]], "2026-09-07": [["Frais Slash", 0.4]], "2026-09-08": [["Frais virement Judy", 25.0], ["Salaire VA", 100.0]], "2026-09-11": [["Frais virement Judy", 25.0]], "2026-09-14": [["Salaire VA", 100.0], ["Shopify", 25.0], ["Frais virement Judy", 25.0]], "2026-09-17": [["Frais virement Judy", 25.0]], "2026-09-18": [["Higgsfield", 49.0]], "2026-09-21": [["Salaire VA", 100.0]], "2026-09-22": [["Frais virement Judy", 25.0]], "2026-09-23": [["Claude", 200.0]], "2026-09-24": [["Frais virement Judy", 25.0]], "2026-09-27": [["Fundree", 285.33]], "2026-09-29": [["Triple Whale", 220.15], ["Salaire VA", 100.0]], "2026-09-30": [["Frais virement Judy", 25.0]], "2026-10-01": [["Frais Slash", 2.85]], "2026-10-02": [["TrendTrack", 89.0], ["eDesk", 140.0]], "2026-10-03": [["Frais Slash", 0.89]], "2026-10-04": [["Frais Slash", 1.4]], "2026-10-05": [["Frais virement Judy", 25.0], ["Salaire VA", 100.0]], "2026-10-06": [["VMake", 9.99]], "2026-10-07": [["Frais Slash", 0.4]], "2026-10-09": [["Frais virement Judy", 25.0]], "2026-10-13": [["Salaire VA", 100.0]], "2026-10-14": [["Shopify", 184.69]], "2026-10-16": [["Frais virement Judy", 25.0], ["ChatGPT", 20.9]], "2026-10-19": [["Salaire VA", 100.0], ["Shopify", 1.07]], "2026-10-20": [["Higgsfield", 49.0]], "2026-10-21": [["Frais Slash", 0.8]], "2026-10-23": [["Fundree", 281.43], ["Frais virement Judy", 25.0], ["Claude", 200.0]], "2026-10-24": [["Frais Slash", 2.81]], "2026-10-26": [["Salaire VA", 100.0], ["Shopify", 1.07]], "2026-10-28": [["Frais Slash", 0.4], ["Shopify", 40.26]], "2026-10-29": [["Triple Whale", 220.15], ["Frais Slash", 0.4]], "2026-10-30": [["Frais virement Judy", 25.0]], "2026-10-31": [["Shopify", 1.0]], "2026-11-03": [["TrendTrack", 89.0]], "2026-11-05": [["Salaire VA", 126.0], ["Frais Slash", 0.89], ["eDesk", 140.0]], "2026-11-06": [["Frais virement Judy", 25.0], ["VMake", 9.99]], "2026-11-07": [["Frais Slash", 1.4]], "2026-11-08": [["Frais Slash", 0.4]], "2026-11-13": [["Shopify", 513.97]], "2026-11-16": [["Cloudflare", 5.0], ["Frais virement Judy", 25.0], ["ChatGPT", 20.69]]};
 const ABOS = [   // à partir du 18/11/2026 — dernier montant lu sur Slash
   { nom: "TrendTrack",   jour: 2,  montant: 89 },
-  { nom: "eDesk",        jour: 3,  montant: 140 },
+  { nom: "eDesk",        jour: 30, montant: 140 },   // prélevé fin de mois (échecs 30/10 → payé 06/11)
   { nom: "VMake",        jour: 7,  montant: 9.99 },
   { nom: "Shopify",      jour: 13, montant: 513.97 },
   { nom: "ChatGPT",      jour: 16, montant: 20.69 },
@@ -597,8 +597,8 @@ function rendre() {
   $("#sous-profit").innerHTML =
     `net <b style="color:var(--texte)">${eur(a.net)}</b> <small style="color:var(--doux)">après abonnements</small> · marge ${pct(a.marge)} · ${a.n} cmd`
     + (() => { const t = toutesLesDates(); if (!t.length) return "";
-        const der = t[t.length - 1], m = agreger(t.filter(x => x.slice(0, 7) === der.slice(0, 7)));
-        return `<br>bénéf de ${MOIS[+der.slice(5, 7) - 1]} <b style="color:${m.net >= 0 ? "var(--vert)" : "var(--rouge)"}">${eur(m.net)}</b>`
+        const der = t[t.length - 1], fin = t.slice(0, -1), m = agreger(fin.filter(x => x.slice(0, 7) === der.slice(0, 7)));
+        return `<br>bénéf de ${MOIS[+der.slice(5, 7) - 1]}${fin.length ? " au " + ddmm(fin[fin.length - 1]) : ""} <b style="color:${m.net >= 0 ? "var(--vert)" : "var(--rouge)"}">${eur(m.net)}</b>`
           + ` <small style="color:var(--doux)">abonnements, Shopify, VA déduits</small>`; })();
 
   const delta = (v, ref) => {
@@ -900,7 +900,8 @@ function rendreMeta(a, dates) {
     return;
   }
   const taux = tauxCouts(dates);
-  $("#meta").innerHTML = `<div class="note-ads">Marge = ventes Triple Whale − pub − produits et frais (${pct(taux)} du CA sur la période)</div>`
+  const tot = liste.reduce((x, [, v]) => x + v.va, 0), ap = agreger(dates);
+  $("#meta").innerHTML = `<div class="note-ads"><b>Marge estimée</b> = ventes attribuées par Triple Whale − pub − produits et frais (${pct(taux)} du CA sur la période). ${ap.ca > tot ? `${eur(ap.ca - tot)} de ventes ne sont attribuées à aucune campagne.` : ""}</div>`
     + liste.map(([nom, v]) => { const g = margeDe(v, taux); return `
     <div class="camp-bloc">
       <div class="camp-tete">
@@ -908,9 +909,9 @@ function rendreMeta(a, dates) {
         <div class="sp">${eur2(v.sp)}</div>
       </div>
       <div class="marge-l"><div class="m ${g.cl}">${signe(g.m)}</div>
-        <div class="p ${g.cl}">marge ${v.va ? pct(g.p) : "—"} · ${Math.round(v.cv)} vente${v.cv >= 2 ? "s" : ""}</div></div>
+        <div class="p ${g.cl}">marge estimée ${v.va ? pct(g.p) : "—"} · ${Math.round(v.cv)} vente${v.cv >= 2 ? "s" : ""}</div></div>
       <div class="grille2">
-        <div class="kpi"><div class="lib">ROAS</div>
+        <div class="kpi"><div class="lib">ROAS attribué</div>
           <div class="val">${v.sp ? num(v.va / v.sp) : "—"}</div></div>
         <div class="kpi"><div class="lib">CPA</div>
           <div class="val">${v.cv ? eur2(v.sp / v.cv) : "—"}</div></div>
@@ -939,7 +940,7 @@ function rendreAds(dates) {
         <small class="camp">${echap(a.camp)}</small></div>
       <div class="chiffres"><div class="ad-m ${g.cl}">${signe(g.m)}</div>
         <small><b>${eur2(a.sp)}</b> dépensés · ${Math.round(a.cv)} vente${a.cv >= 2 ? "s" : ""}</small>
-        <small>ROAS ${a.sp ? num(a.va / a.sp) : "—"} · CPA ${a.cv ? eur2(a.sp / a.cv) : "—"}</small></div>
+        <small>marge estimée · ROAS attribué ${a.sp ? num(a.va / a.sp) : "—"} · CPA ${a.cv ? eur2(a.sp / a.cv) : "—"}</small></div>
     </div>`; }).join("") : `<div class="vide-msg">Aucune diffusion sur la période.</div>`;
 }
 
@@ -1059,13 +1060,14 @@ function rendreAnalyse() {
   const lundis = [...new Set(finis.map(lundiDe))].slice(-12);
   const premiere = {};
   for (const d of Object.keys(D.ads || {}).sort()) for (const ad of D.ads[d]) {
-    const k = ad.nom + "|" + (ad.camp || ""); if (!premiere[k] && (ad.sp || 0) > 0) premiere[k] = d;
+    const k = ad.nom; if (!premiere[k] && (ad.sp || 0) > 0) premiere[k] = d;
   }
   const premAds = Object.keys(D.ads || {}).sort()[0] || "9999";
   const sem = lundis.map(l => {
     const ds = finis.filter(d => lundiDe(d) === l);
     const lance = Object.values(premiere).filter(d => lundiDe(d) === l).length;
-    return { lundi: l, a: agreger(ds), lance: l > premAds ? lance : null, nb: ds.length };
+    const couvert = new Date(premAds + "T12:00:00Z"); couvert.setUTCDate(couvert.getUTCDate() + 7);
+    return { lundi: l, a: agreger(ds), lance: l >= couvert.toISOString().slice(0, 10) ? lance : null, nb: ds.length };
   });
   $("#an-graph-sem").innerHTML = grapheSemaines(sem);
   $("#an-sem").innerHTML = sem.slice().reverse().map(w => `
@@ -1115,7 +1117,7 @@ function rendreObjectif() {
   const prog = Math.min(1, (caJour - prec * 1000) / ((prochain - prec) * 1000));
   let serie = 0; for (let i = finis.length - 1; i >= 0; i--) { if (agreger([finis[i]]).profit >= 0) serie++; else break; }
   let rec = { ca: 0, d: "" }; for (const d of finis) { const c = ((D.jours || {})[d] || {}).ca || 0; if (c > rec.ca) rec = { ca: c, d }; }
-  const t = toutesLesDates(), der = t[t.length - 1] || "", mois = agreger(t.filter(x => x.slice(0, 7) === der.slice(0, 7)));
+  const t = toutesLesDates(), der = t[t.length - 1] || "", mois = agreger(finis.filter(x => x.slice(0, 7) === der.slice(0, 7)));
   $("#pl-obj").innerHTML = `
     <div class="obj-gros">${eur(caJour)} <small style="font-size:16px;color:var(--doux)">/ jour</small></div>
     <div class="obj-lib">moyenne des 7 derniers jours · prochain palier <b style="color:var(--texte)">${prochain} KD</b> = ${eur(prochain * 1000)} / jour</div>
@@ -1125,7 +1127,7 @@ function rendreObjectif() {
     <div class="obj-lib" style="margin-top:4px">paliers en KD (milliers de $ de CA par jour) — 12 KD visé au 30/11</div>
     <div class="stats3">
       <div><b class="${mois.net < 0 ? "m-non" : "m-ok"}">${signe(mois.net)}</b><small>bénéf de ${MOIS[+der.slice(5, 7) - 1] || ""}</small></div>
-      <div><b>${serie}</b><small>jour${serie > 1 ? "s" : ""} rentable${serie > 1 ? "s" : ""} d'affilée</small></div>
+      <div><b>${serie}</b><small>jour${serie > 1 ? "s" : ""} rentable${serie > 1 ? "s" : ""} d'affilée (avant abonnements)</small></div>
       <div><b>${eur(rec.ca)}</b><small>record CA · ${rec.d ? ddmm(rec.d) : "—"}</small></div>
     </div>`;
 }
@@ -1149,14 +1151,18 @@ function rendrePrevision() {
   }
   // Projection du bénéf de fin de mois au rythme des 7 derniers jours
   const ym = auj.slice(0, 7), dm = t.filter(x => x.slice(0, 7) === ym && x < auj);
-  const deja = agreger(dm).net, rythme = d7.length ? a7.contribution / d7.length : 0;
+  const deja = agreger(dm).net;
+  const lundisFinis = [...new Set(finis.map(lundiDe))].filter(l => finis.filter(x => lundiDe(x) === l).length === 7).slice(-3);
+  const semaines = lundisFinis.map(l => { const a = agreger(finis.filter(x => lundiDe(x) === l)); return { l, j: a.contribution / 7, roas: a.roas }; });
+  const faible = semaines.reduce((m, w) => !m || w.j < m.j ? w : m, null);
+  const rythme = faible ? faible.j : 0;
   const fin = new Date(Date.UTC(+ym.slice(0, 4), +ym.slice(5, 7), 0)).getUTCDate();
   let reste = 0, fixesReste = 0;
   for (let j = +auj.slice(8, 10); j <= fin; j++) { reste++; fixesReste += fixesJour(ym + "-" + String(j).padStart(2, "0")); }
   const proj = deja + rythme * reste - fixesReste;
   $("#pl-prev").innerHTML = (h || `<div class="vide-msg">Rien de prévu.</div>`) +
     `<div class="prev-j"><div class="q">Total</div><div class="l">hors THB · Judy estimée sur la dernière semaine</div><div class="m">${eur(total)}</div></div>
-     <div class="obj-lib" style="margin-top:14px">bénéf de ${MOIS[+ym.slice(5, 7) - 1]} si le rythme des 7 derniers jours continue</div>
+     <div class="obj-lib" style="margin-top:14px">bénéf de ${MOIS[+ym.slice(5, 7) - 1]} au rythme de ta semaine la plus faible des 3 dernières${faible ? ` (semaine du ${ddmm(faible.l)}, ROAS ${num(faible.roas)})` : ""}</div>
      <div class="obj-gros ${proj < 0 ? "m-non" : "m-ok"}" style="font-size:28px">${signe(proj)}</div>`;
 }
 function rendrePlan() {
