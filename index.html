@@ -433,22 +433,29 @@ function fenetre(nbJours, decalage = 0) {
 
 // ── Abonnements (coûts fixes) — calculés ICI, dans l'app. Changer une valeur = instantané. ──
 const DEBUT_FIXES = "2026-08-01";
-const ABOS = [
-  { nom: "TrendTrack",   jour: 2,  montant: 89 },
-  { nom: "Claude",       jour: 23, montant: 200 },
-  { nom: "Higgsfield",   jour: 21, montant: 250 },
-  { nom: "Canva",        jour: 21, montant: 13 },
-  { nom: "ChatGPT",      jour: 28, montant: 25 },
+const ABOS = [   // secours seulement (17/11/2026, recopié de compta/bareme.py)
+  { nom: "Higgsfield",   jour: 18, montant: 49 },
   { nom: "Triple Whale", jour: 29, montant: 220 },
+  { nom: "Claude",       jour: 23, montant: 200 },
+  { nom: "Fundree",      jour: 23, montant: 282 },
+  { nom: "TrendTrack",   jour: 2,  montant: 89 },
+  { nom: "ChatGPT",      jour: 17, montant: 21 },
+  { nom: "Cloudflare",   jour: 16, montant: 5 },
+  { nom: "eDesk",        jour: 30, montant: 140 },
+  { nom: "VMake",        jour: 7,  montant: 9.99 },
 ];
 const ABOS_HEBDO = [ { nom: "Salaire VA", jsem: 1, montant: 98 } ]; // 1 = lundi (getUTCDay)
 function abosDuJour(iso) {
-  if (iso < DEBUT_FIXES) return [];
+  // 17/11/2026 : la liste vient du barème du Mac (D.abos, écrit par la collecte).
+  // ABOS / ABOS_HEBDO ci-dessus ne servent plus qu'en secours si D.abos manque.
+  const src = (D && D.abos) || null;
+  if (iso < (src ? src.debut : DEBUT_FIXES)) return [];
   const dd = new Date(iso + "T12:00:00Z");
   const jm = dd.getUTCDate(), js = dd.getUTCDay();
   const out = [];
-  for (const a of ABOS) if (a.jour === jm) out.push(a);
-  for (const a of ABOS_HEBDO) if (a.jsem === js) out.push(a);
+  for (const a of (src ? src.mensuels : ABOS)) if (a.jour === jm) out.push(a);
+  for (const a of (src ? src.hebdo : ABOS_HEBDO)) if (a.jsem === js) out.push(a);
+  if (src && src.shopify && src.shopify[iso]) out.push({ nom: "Facture Shopify", montant: src.shopify[iso] });
   return out;
 }
 function fixesJour(iso) { return abosDuJour(iso).reduce((s, a) => s + a.montant, 0); }
