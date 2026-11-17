@@ -1235,7 +1235,7 @@ function rendreTodo() {
   const claude = T.filter(x => x.qui === "claude" && (!x.fait || x.jour >= plusJours(aujL, -7)));
   const nomJ = TD.jour === aujL ? "aujourd'hui" : JOURS3[new Date(TD.jour + "T12:00:00Z").getUTCDay()] + " " + ddmm(TD.jour);
   w.innerHTML = `
-    <div class="motiv"><img src="img/motiv-${String(mi + 1).padStart(2, "0")}.jpg?v=3" alt="" onload="this.parentNode.classList.add('img-ok')" onerror="this.remove()">
+    <div class="motiv"><img src="img/motiv-${String(mi + 1).padStart(2, "0")}.jpg?v=4" alt="" onload="this.parentNode.classList.add('img-ok')" onerror="this.remove()">
       <div class="m">${MOIS[mi]} · objectif 100 KD</div><div class="q">${PHRASES[mi]}</div></div>
     <div class="semaine" id="td-sem">${jours.map(iso => { const d = new Date(iso + "T12:00:00Z");
       const reste = T.filter(x => x.qui === "moi" && x.jour === iso && !x.fait).length;
