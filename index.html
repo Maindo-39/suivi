@@ -139,7 +139,7 @@
   .prev-j .q{font-weight:800;font-size:15px;flex:0 0 74px}
   .prev-j .l{flex:1;min-width:0;font-size:13px;color:var(--doux)}
   .prev-j .m{font-weight:800;font-size:16px;white-space:nowrap}
-  .pastille-thb{display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--rouge);vertical-align:0}
+  .pastille-thb{display:inline-block;width:10px;height:10px;border-radius:50%;background:#a855f7;vertical-align:0}
   .hero.encours{border-color:var(--doux)} .hero.encours .verdict{color:var(--texte)}
   .profit{font-size:44px;font-weight:800;letter-spacing:-2px;margin:6px 0 2px;
           font-variant-numeric:tabular-nums}
@@ -190,7 +190,8 @@
   .cal .case.bout{outline:2px solid var(--accent);outline-offset:1px}
   .cal .case{position:relative}
   .cal .case .abo-dot{position:absolute;top:4px;right:4px;width:6px;height:6px;border-radius:50%;background:var(--orange)}
-  .cal .case .thb-dot{position:absolute;top:4px;left:4px;width:6px;height:6px;border-radius:50%;background:var(--rouge)}
+  .cal .case .thb-dot{position:absolute;top:4px;left:4px;width:6px;height:6px;border-radius:50%;background:#a855f7}
+  .cal .case .neg-dot{position:absolute;bottom:4px;left:50%;transform:translateX(-50%);width:14px;height:3px;border-radius:2px;background:var(--rouge)}
   .detail-jour{margin-top:13px;padding-top:13px;border-top:1px solid var(--bord);font-size:14px}
   .detail-jour .titre{font-weight:700;margin-bottom:4px}
   .detail-jour .consigne{font-size:11px;color:var(--tres-doux);margin-bottom:9px}
@@ -265,6 +266,11 @@
   .semaine button.auj{background:var(--accent);border-color:var(--accent);color:#000}
   .semaine button.auj .js{color:#000}
   .semaine button.sel{outline:2px solid var(--accent2);outline-offset:1px}
+  .semaine.petite{gap:4px} .semaine.petite button{padding:4px 0 5px;border-radius:11px;pointer-events:none}
+  .semaine.petite button .n{font-size:14px} .semaine.petite button .js{font-size:9px}
+  textarea.todo-txt{flex:1;min-width:0;font:inherit;font-size:16px;padding:12px;border-radius:12px;border:1px solid var(--bord);
+                    background:var(--carte2);color:var(--texte);resize:none;overflow:hidden;min-height:48px;line-height:1.4}
+  .ajout{align-items:flex-end}
   .pt.ok{background:var(--vert)!important} .pt.moyen{background:var(--orange)!important} .pt.non{background:var(--rouge)!important}
   .pt.t{background:var(--accent2)!important}
   .titre-page{font-size:30px;font-weight:900;letter-spacing:-1px;margin:4px 2px 12px}
@@ -283,7 +289,7 @@
   .kpis .k .v{font-size:26px;font-weight:900;letter-spacing:-.8px;margin-top:3px}
   .kpis .k.large .v{font-size:38px}
   .kpis .k .s{font-size:12px;color:var(--doux)}
-  .motiv{position:relative;border-radius:22px;overflow:hidden;min-height:230px;margin:0 -6px 12px;
+  .motiv{position:relative;border-radius:22px;overflow:hidden;min-height:230px;margin:0 0 12px;
          display:flex;flex-direction:column;justify-content:flex-end;padding:20px;
          background:radial-gradient(120% 90% at 85% 0%,#ff7a00 0%,#7a2600 35%,#1a0800 65%,#000 100%);border:1px solid #3a1d00}
   .motiv img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
@@ -365,7 +371,7 @@
   <header>
     <select class="boutique" id="boutique" title="Boutique">
       <option value="saintmuse">🛍️ Saint Muse</option>
-      <option value="novalane" disabled>Nova Lane · à brancher</option>
+      <option value="amysiaa" disabled>Amysiaa · à brancher</option>
       <option value="romyrosia" disabled>Romyrosia · à brancher</option>
     </select>
     <div class="tete-d">
@@ -385,19 +391,19 @@
     <button data-p="4">Objectif</button>
   </div>
   <div class="pages" id="pages">
-    <div class="page" id="page-compta"></div>
     <div class="page" id="page-ads"></div>
-    <div class="page" id="page-analyse"><div id="an-wrap"></div></div>
+    <div class="page" id="page-compta"></div>
     <div class="page" id="page-todo"><div id="todo-wrap"></div></div>
     <div class="page" id="page-plan"><div id="plan-wrap"></div></div>
+    <div class="page" id="page-analyse"><div id="an-wrap"></div></div>
   </div>
 
   <nav class="nav" id="nav"><div class="nav-in">
-    <button data-p="0" class="actif"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 6.5c0-1.9-2.2-3-5-3s-5 1.2-5 3.4c0 4.8 10 2.6 10 7.4 0 2.2-2.2 3.4-5 3.4s-5-1.1-5-3"/></svg>Compta</button>
-    <button data-p="1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.2" fill="currentColor"/></svg>Ads</button>
-    <button data-p="2"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20h18"/><path d="M6 16v-5M11 16V7M16 16v-8M20 16V4"/></svg>Analyse</button>
-    <button data-p="3"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="3.5" width="17" height="17" rx="5"/><path d="m8 12 3 3 5-6"/></svg>To-do</button>
-    <button data-p="4"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c3 2.5 4.5 5.5 4.5 9.5L12 21l-4.5-8.5C7.5 8.5 9 5.5 12 3z"/><circle cx="12" cy="10" r="1.6"/></svg>Objectif</button>
+    <button data-p="0"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.2" fill="currentColor"/></svg>Ads</button>
+    <button data-p="1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 6.5c0-1.9-2.2-3-5-3s-5 1.2-5 3.4c0 4.8 10 2.6 10 7.4 0 2.2-2.2 3.4-5 3.4s-5-1.1-5-3"/></svg>Compta</button>
+    <button data-p="2"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="3.5" width="17" height="17" rx="5"/><path d="m8 12 3 3 5-6"/></svg>To-do</button>
+    <button data-p="3"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c3 2.5 4.5 5.5 4.5 9.5L12 21l-4.5-8.5C7.5 8.5 9 5.5 12 3z"/><circle cx="12" cy="10" r="1.6"/></svg>Objectif</button>
+    <button data-p="4"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20h18"/><path d="M6 16v-5M11 16V7M16 16v-8M20 16V4"/></svg>Analyse</button>
   </div></nav>
   <div id="alerte-remb"></div>
 
@@ -592,12 +598,16 @@ const ABOS_HEBDO = [ { nom: "Frais virement Judy", jsem: 5, montant: 25 } ]; // 
 // VA : toutes les deux semaines en novembre (dernier paiement 126 $ le 05/11), une fois par mois
 // en fin de mois à partir de décembre. Remplacé par le montant réel dès qu'il est payé.
 const VA_PREVU = { "2026-11-19": 126 };
+// Plan du 16/11 (Miradj) : prélèvements décalés. Date prévue → nouvelle date.
+const DECALES = { "2026-11-18|Higgsfield": "2026-12-15", "2026-11-29|Triple Whale": "2026-12-14", "2026-12-02|TrendTrack": "2026-12-15" };
 function abosDuJour(iso) {
   if (iso < DEBUT_FIXES) return [];
   if (iso <= FIXES_JUSQUA) return (FIXES_REELS[iso] || []).map(([nom, montant]) => ({ nom, montant }));
   const dd = new Date(iso + "T12:00:00Z");
   const jm = dd.getUTCDate(), js = dd.getUTCDay();
-  return [...ABOS.filter(a => a.jour === jm), ...ABOS_HEBDO.filter(a => a.jsem === js),
+  const ici = Object.entries(DECALES).filter(([k, v]) => v === iso).map(([k]) => ABOS.find(a => a.nom === k.split("|")[1]))
+                .filter(Boolean).map(a => ({ nom: a.nom + " (décalé)", montant: a.montant }));
+  return [...ABOS.filter(a => a.jour === jm && !DECALES[iso + "|" + a.nom]), ...ici, ...ABOS_HEBDO.filter(a => a.jsem === js),
           ...(VA_PREVU[iso] ? [{ nom: "Salaire VA (prévu)", montant: VA_PREVU[iso] }] : [])];
 }
 function fixesJour(iso) { return abosDuJour(iso).reduce((s, a) => s + a.montant, 0); }
@@ -854,13 +864,16 @@ function rendreCalendrier() {
       const j = (D.jours || {})[iso] || {};
       const actif = (j.ca || 0) + (j.n || 0) + ((D.spend || {})[iso] || 0);
       const tt = toutesLesDates(), estAuj = iso === tt[tt.length - 1];   // journée en cours : pas de couleur
-      let cl = actif > 0 && !estAuj ? { ok: "a", moyen: "b", non: "c" }[classe(agreger([iso]))] : "";
+      const ag = agreger([iso]);
+      let cl = actif > 0 && !estAuj ? { ok: "a", moyen: "b", non: "c" }[classe(ag)] : "";
+      // rentable avant abonnements, mais dans le rouge une fois les abonnements du jour retirés
+      const neg = actif > 0 && !estAuj && ag.profit >= 0 && ag.net < 0 ? '<span class="neg-dot"></span>' : "";
       const hi = sb || sa;
       if (sa && iso >= sa && iso <= hi) cl += " dans";
       if (iso === sa || iso === sb) cl += " bout";
       const abo = (abosDuJour(iso).length ? '<span class="abo-dot"></span>' : "")
                 + (d === 25 ? '<span class="thb-dot"></span>' : "");   // repère THB, jamais compté
-      h += `<div class="case ${cl}" data-d="${iso}">${d}${abo}</div>`;
+      h += `<div class="case ${cl}" data-d="${iso}">${d}${abo}${neg}</div>`;
     }
     return h;
   };
@@ -1023,8 +1036,8 @@ function rendrePays(dates) {
       <div class="nom"><div class="t">${drapeau(p)} ${p}</div>
         <small>${v.n} commande${v.n > 1 ? "s" : ""} · panier ${v.n ? eur2(v.ca / v.n) : "—"}</small></div>
       <div class="chiffres"><b>${eur2(v.ca)}</b>
-        <small>${total.ca ? Math.round(v.ca / total.ca * 100) : 0} % du CA</small></div>
-    </div>`).join("") : `<div class="vide-msg">Aucune vente sur la période.</div>`;
+        <small>${total.ca ? Math.round(v.ca / total.ca * 100) : 0} % du CA · <b style="color:var(--accent2)">ROAS BE ${v.ca - v.cogs - v.frais > 0 ? num(v.ca / (v.ca - v.cogs - v.frais)) : "—"}</b></small></div>
+    </div>`).join("") + `<div class="note">ROAS BE = le ROAS minimum pour être rentable dans ce pays (produits + port + frais). Le ROAS réel par pays arrive quand le robot lira la pub par pays.</div>` : `<div class="vide-msg">Aucune vente sur la période.</div>`;
 }
 
 function rendreProduits(dates) {
@@ -1099,18 +1112,17 @@ function rendreSemaine() {
       <span class="js">${JOURS3[d.getUTCDay()].slice(0, 3)}</span><span class="n">${d.getUTCDate()}</span><span class="pt ${pt}"></span></button>`;
   }).join("");
   $("#semaine").querySelectorAll("button[data-d]").forEach(b => b.onclick = () => {
-    SEL_A = b.dataset.d; SEL_B = null; CAL_AN = null; rendre(); allerPage(0);
+    SEL_A = b.dataset.d; SEL_B = null; CAL_AN = null; rendre(); allerPage(1);
     setTimeout(() => { const e = $("#detail-jour"); if (e) e.scrollIntoView({ behavior: "smooth", block: "center" }); }, 350);
   });
 }
 
 /* ═════════ Analyse : période au choix, très visuel ═════════ */
-let AN = { p: "3m", deb: "", fin: "" };
-const AN_P = [["1m", "1 mois", 30], ["2m", "2 mois", 61], ["3m", "3 mois", 92], ["6m", "6 mois", 183],
-              ["1a", "1 an", 365], ["tout", "Tout", 99999], ["lib", "📅 Dates", 0]];
+let AN = { p: "3m", deb: "", fin: "", cm: "" };
+const AN_P = [["1m", "1 mois", 30], ["3m", "3 mois", 92], ["1a", "1 an", 365], ["lib", "📅 Dates", 0]];
 function anDates() {
   const f = joursFinis(); if (!f.length) return [];
-  if (AN.p === "lib") return f.filter(d => (!AN.deb || d >= AN.deb) && (!AN.fin || d <= AN.fin));
+  if (AN.p === "lib") return AN.deb && AN.fin ? f.filter(d => d >= AN.deb && d <= AN.fin) : f.slice(-30);
   return f.slice(-((AN_P.find(x => x[0] === AN.p) || [])[2] || 92));
 }
 function paquets(dates) {
@@ -1121,34 +1133,57 @@ function paquets(dates) {
   return { g, liste: ordre.map(k => ({ k, ds: par[k], a: agreger(par[k]),
     lab: g === "mois" ? MOIS3[+k.slice(5, 7) - 1] : ddmm(k) })) };
 }
+function graduations(min, max) {   // 4 graduations « rondes »
+  const et = (max - min) || 1, brut = et / 4, p = Math.pow(10, Math.floor(Math.log10(brut)));
+  const pas = [1, 2, 2.5, 5, 10].map(k => k * p).find(k => k >= brut) || brut;
+  const out = []; for (let v = Math.ceil(min / pas) * pas; v <= max + 1e-9; v += pas) out.push(+v.toFixed(6));
+  return out;
+}
+const court$ = v => Math.abs(v) >= 1000 ? (v / 1000).toLocaleString("fr-FR", { maximumFractionDigits: 1 }) + " k" : Math.round(v).toLocaleString("fr-FR");
 function grapheBarres(vals, etiq, couleur, fmt) {
-  const L = 340, H = 180, n = vals.length || 1, lg = L / n, pas = Math.ceil(n / 8);
+  const L = 340, H = 240, G = 38, n = vals.length || 1, lg = (L - G) / n, pas = Math.ceil(n / 7);
   const max = Math.max(...vals, 0), min = Math.min(...vals, 0), et = (max - min) || 1;
-  const y = v => 20 + (max - v) / et * (H - 62);
-  let h = `<line x1="0" x2="${L}" y1="${y(0)}" y2="${y(0)}" stroke="#333" stroke-dasharray="3 3"/>`;
+  const y = v => 16 + (max - v) / et * (H - 50);
+  let h = graduations(min, max).map(t => `<line x1="${G}" x2="${L}" y1="${y(t)}" y2="${y(t)}" stroke="#222"/><text x="${G - 5}" y="${y(t) + 4}" text-anchor="end" font-size="11" fill="#777">${fmt ? fmt(t) : court$(t)}</text>`).join("");
+  h += `<line x1="${G}" x2="${L}" y1="${y(0)}" y2="${y(0)}" stroke="#555"/>`;
   vals.forEach((v, i) => {
-    const x = i * lg + lg * .16, w = Math.max(lg * .68, 1.5), y0 = y(0), yv = y(v);
+    const x = G + i * lg + lg * .16, w = Math.max(lg * .68, 1.5), y0 = y(0), yv = y(v);
     h += `<rect x="${x}" y="${Math.min(y0, yv)}" width="${w}" height="${Math.max(Math.abs(yv - y0), 2)}" rx="${Math.min(5, w / 3)}" fill="${couleur(v)}"/>`;
-    if (n <= 12) h += `<text x="${x + w / 2}" y="${v >= 0 ? yv - 6 : yv + 15}" text-anchor="middle" font-size="12" font-weight="800" fill="#f7f7f7">${fmt ? fmt(v) : Math.round(v).toLocaleString("fr-FR")}</text>`;
-    if ((n - 1 - i) % pas === 0) h += `<text x="${x + w / 2}" y="${H - 4}" text-anchor="middle" font-size="12" fill="#9b9b9b">${etiq[i]}</text>`;
+    if (n <= 10) h += `<text x="${x + w / 2}" y="${v >= 0 ? yv - 6 : yv + 15}" text-anchor="middle" font-size="12" font-weight="800" fill="#f7f7f7">${fmt ? fmt(v) : court$(v)}</text>`;
+    if ((n - 1 - i) % pas === 0) h += `<text x="${i === n - 1 && n > 1 ? x + w : x + w / 2}" y="${H - 6}" text-anchor="${i === n - 1 && n > 1 ? "end" : "middle"}" font-size="12" fill="#9b9b9b">${etiq[i]}</text>`;
   });
   return `<svg class="graphe" viewBox="0 0 ${L} ${H}">${h}</svg>`;
 }
-function grapheLignes(series, etiq, seuil) {
-  const L = 340, H = 180, n = etiq.length || 1, pas = Math.ceil(n / 8);
-  const tous = series.flatMap(s => s.v).concat(seuil !== undefined ? [seuil, 0] : [0]);
+function grapheLignes(series, etiq, seuils, fmt) {   // seuils : [{v, c, nom}]
+  const L = 340, H = 240, G = 42, n = etiq.length || 1, pas = Math.ceil(n / 7);
+  const tous = series.flatMap(s => s.v).concat((seuils || []).map(s => s.v), [0]);
   const max = Math.max(...tous), min = Math.min(...tous), et = (max - min) || 1;
-  const x = i => n === 1 ? L / 2 : 8 + i * (L - 16) / (n - 1), y = v => 14 + (max - v) / et * (H - 46);
-  let h = "";
-  if (seuil !== undefined) h += `<line x1="0" x2="${L}" y1="${y(seuil)}" y2="${y(seuil)}" stroke="#ff7a00" stroke-width="1.5" stroke-dasharray="5 4"/>`;
+  const x = i => n === 1 ? (G + L) / 2 : G + 8 + i * (L - G - 16) / (n - 1), y = v => 14 + (max - v) / et * (H - 48);
+  const f = fmt || court$;
+  let h = graduations(min, max).map(t => `<line x1="${G}" x2="${L}" y1="${y(t)}" y2="${y(t)}" stroke="#222"/><text x="${G - 5}" y="${y(t) + 4}" text-anchor="end" font-size="11" fill="#777">${f(t)}</text>`).join("");
+  for (const sv of (seuils || [])) h += `<line x1="${G}" x2="${L}" y1="${y(sv.v)}" y2="${y(sv.v)}" stroke="${sv.c}" stroke-width="1.6" stroke-dasharray="5 4"/>`;
   for (const s of series) {
     const d = s.v.map((v, i) => `${i ? "L" : "M"}${x(i).toFixed(1)},${y(v).toFixed(1)}`).join("");
     if (s.aire) h += `<path d="${d}L${x(n - 1)},${y(Math.max(min, 0))}L${x(0)},${y(Math.max(min, 0))}Z" fill="${s.c}" opacity=".14"/>`;
     h += `<path d="${d}" fill="none" stroke="${s.c}" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>`;
-    if (n <= 31) s.v.forEach((v, i) => h += `<circle cx="${x(i)}" cy="${y(v)}" r="2.6" fill="${s.c}"/>`);
+    if (n <= 31) s.v.forEach((v, i) => h += `<circle cx="${x(i)}" cy="${y(v)}" r="2.8" fill="${s.c}"/>`);
   }
-  etiq.forEach((e, i) => { if ((n - 1 - i) % pas === 0) h += `<text x="${x(i)}" y="${H - 4}" text-anchor="${i === n - 1 && n > 1 ? "end" : i === 0 ? "start" : "middle"}" font-size="12" fill="#9b9b9b">${e}</text>`; });
-  return `<div class="leg">${series.map(s => `<span><i style="background:${s.c}"></i>${s.nom}</span>`).join("")}${seuil !== undefined ? `<span><i style="background:#ff7a00"></i>seuil ${Math.round(seuil * 100)} %</span>` : ""}</div><svg class="graphe" viewBox="0 0 ${L} ${H}">${h}</svg>`;
+  etiq.forEach((e, i) => { if ((n - 1 - i) % pas === 0) h += `<text x="${x(i)}" y="${H - 6}" text-anchor="${i === n - 1 && n > 1 ? "end" : "middle"}" font-size="12" fill="#9b9b9b">${e}</text>`; });
+  return `<div class="leg">${series.map(s => `<span><i style="background:${s.c}"></i>${s.nom}</span>`).join("")}${(seuils || []).map(sv => `<span><i style="background:${sv.c}"></i>${sv.nom}</span>`).join("")}</div><svg class="graphe" viewBox="0 0 ${L} ${H}">${h}</svg>`;
+}
+function calendrierPlage() {   // choisir début puis fin en touchant les jours
+  const f = joursFinis(); if (!f.length) return "";
+  if (!AN.cm) AN.cm = (AN.fin || f[f.length - 1]).slice(0, 7);
+  const an = +AN.cm.slice(0, 4), mo = +AN.cm.slice(5, 7) - 1, nb = new Date(Date.UTC(an, mo + 1, 0)).getUTCDate();
+  const dec = (new Date(Date.UTC(an, mo, 1)).getUTCDay() + 6) % 7;
+  let h = JSEM.map(j => `<div class="jsem">${j}</div>`).join("") + "<div class=\"case vide\"></div>".repeat(dec);
+  for (let d = 1; d <= nb; d++) {
+    const iso = `${AN.cm}-${String(d).padStart(2, "0")}`, ok = iso >= f[0] && iso <= f[f.length - 1];
+    const dans = AN.deb && AN.fin && iso >= AN.deb && iso <= AN.fin, bout = iso === AN.deb || iso === AN.fin;
+    h += `<div class="case ${dans ? "dans" : ""} ${bout ? "bout" : ""}" ${ok ? `data-d="${iso}"` : 'style="opacity:.25"'}>${d}</div>`;
+  }
+  return `<section style="padding:12px"><div class="cal-tete"><button id="an-prec">&#8249;</button><div class="mois">${MOIS[mo]} ${an}</div><button id="an-suiv">&#8250;</button></div>
+    <div class="cal" id="an-cal">${h}</div><div class="note" style="text-align:center">${AN.deb && !AN.fin ? "Touche le dernier jour" : "Touche le premier jour, puis le dernier"}</div></section>`;
 }
 function rendreAnalyse() {
   const w = $("#an-wrap"); if (!w) return;
@@ -1162,11 +1197,15 @@ function rendreAnalyse() {
   const debAds = plusJours(Object.keys(D.ads || {}).sort()[0] || "9999-12-31", 7);
   const lancesT = Ltout.map(p => p.ds[0] >= debAds ? Object.values(premiere).filter(d => p.ds.includes(d)).length : null);
   const lances = lancesT.slice(0, L.length);
+  // détail : les 8 dernières semaines, quelle que soit la période choisie
+  const finisT = joursFinis(), l8s = [...new Set(finisT.map(lundiDe))].slice(-8);
+  const S8 = l8s.map(l => { const ds = finisT.filter(d => lundiDe(d) === l); return { k: l, ds, a: agreger(ds) }; });
+  const l8 = S8.map(p => p.ds[0] >= debAds ? Object.values(premiere).filter(d => p.ds.includes(d)).length : null);
   const k = (lib, val, sous, cl) => `<div class="k ${cl || ""}"><div class="l">${lib}</div><div class="v">${val}</div>${sous ? `<div class="s">${sous}</div>` : ""}</div>`;
   w.innerHTML = `
     <div class="titre-page">Analyse 📈<small>${dates.length ? `du ${ddmm(dates[0])}/${dates[0].slice(2, 4)} au ${ddmm(dates[dates.length - 1])}/${dates[dates.length - 1].slice(2, 4)} · ${dates.length} jours · par ${nomG}` : "aucune donnée"}</small></div>
     <div class="chips">${AN_P.map(([c, l]) => `<button data-p="${c}" class="${AN.p === c ? "actif" : ""}">${l}</button>`).join("")}</div>
-    ${AN.p === "lib" ? `<div class="dates-libres"><input type="date" id="an-deb" value="${AN.deb}"><span>→</span><input type="date" id="an-fin" value="${AN.fin}"></div>` : ""}
+    ${AN.p === "lib" ? calendrierPlage() : ""}
     <div class="kpis">
       ${k("Bénéf · abonnements, Shopify, VA déduits", `<span style="color:${couleurNet(a.net)}">${signe(a.net)}</span>`, "sans THB", "large")}
       ${k("Chiffre d'affaires", eur(a.ca), `${a.n} commandes`)}
@@ -1175,17 +1214,22 @@ function rendreAnalyse() {
       ${k("Marge", `<span class="${a.marge < 0 ? "m-non" : a.marge < 0.15 ? "m-moyen" : "m-ok"}">${pct(a.marge)}</span>`, "avant abonnements")}
     </div>
     <section><h2>💰 Bénéf par ${nomG}</h2>${grapheBarres(L.map(p => p.a.net), L.map(p => p.lab), couleurNet)}</section>
-    <section><h2>📊 CA et pub par ${nomG}</h2>${grapheLignes([{ nom: "CA", c: "#ff7a00", v: L.map(p => p.a.ca), aire: true }, { nom: "Pub", c: "#9b9b9b", v: L.map(p => p.a.spend) }], L.map(p => p.lab))}</section>
-    <section><h2>🎯 Marge par ${nomG}</h2>${grapheLignes([{ nom: "Marge", c: "#34d399", v: L.map(p => p.a.marge), aire: true }], L.map(p => p.lab), D.seuils?.marge_ok ?? 0.15)}</section>
+    <section><h2>📊 CA et pub par ${nomG} <span>en $</span></h2>${grapheLignes([{ nom: "CA", c: "#ff7a00", v: L.map(p => p.a.ca), aire: true }, { nom: "Pub", c: "#9b9b9b", v: L.map(p => p.a.spend) }], L.map(p => p.lab))}</section>
+    <section><h2>🎯 Marge par ${nomG}</h2>${grapheLignes([{ nom: "Marge", c: "#34d399", v: L.map(p => p.a.marge), aire: true }], L.map(p => p.lab),
+      [{ v: D.seuils?.marge_ok ?? 0.15, c: "#ff7a00", nom: "bonne journée 15 %" }, { v: 0, c: "#ff5a5a", nom: "rentable 0 %" }], v => Math.round(v * 100) + " %")}</section>
     ${lances.some(x => x !== null) ? `<section><h2>🚀 Créas lancées par ${nomG}</h2>${grapheBarres(lances.map(x => x || 0), L.map(p => p.lab), () => "#ff7a00", v => String(v))}</section>` : ""}
-    <section><h2>🧾 Détail par ${nomG}</h2>${Ltout.slice().reverse().map((p, i) => { const j = Ltout.length - 1 - i; return `
-      <div class="mois-c"><div class="t">${P.g === "mois" ? maj1(MOIS[+p.k.slice(5, 7) - 1]) + " " + p.k.slice(0, 4) : P.g === "semaine" ? "Semaine du " + ddmm(p.k) : maj1(JOURS3[new Date(p.k + "T12:00:00Z").getUTCDay()]) + " " + ddmm(p.k)}${p.k < DEBUT_FIXES ? ` <small style="color:var(--doux);font-weight:400">sans abonnements</small>` : ""}</div>
+    <section><h2>🧾 Les 8 dernières semaines</h2>${S8.slice().reverse().map((p, i) => { const j = S8.length - 1 - i; return `
+      <div class="mois-c"><div class="t">Semaine du ${ddmm(p.k)}</div>
         <div class="b ${p.a.net < 0 ? "m-non" : "m-ok"}">${signe(p.a.net)}</div>
-        <div class="d">CA <b>${eur(p.a.ca)}</b> · pub ${eur(p.a.spend)} · ROAS <b>${p.a.roas ? num(p.a.roas) : "—"}</b> · marge <b>${pct(p.a.marge)}</b>${lancesT[j] !== null && lancesT[j] !== undefined ? ` · 🚀 <b>${lancesT[j]}</b>` : ""}${P.g === "semaine" && p.ds.length < 7 ? ` · <i>${p.ds.length} j</i>` : ""}</div></div>`; }).join("")}</section>`;
+        <div class="d">CA <b>${eur(p.a.ca)}</b> · pub ${eur(p.a.spend)} · ROAS <b>${p.a.roas ? num(p.a.roas) : "—"}</b> · marge <b>${pct(p.a.marge)}</b>${l8[j] !== null ? ` · 🚀 <b>${l8[j]}</b>` : ""}${p.ds.length < 7 ? ` · <i>${p.ds.length} j</i>` : ""}</div></div>`; }).join("")}</section>`;
   w.querySelectorAll(".chips button").forEach(b => b.onclick = () => { AN.p = b.dataset.p; rendreAnalyse(); });
-  const de = $("#an-deb"), fi = $("#an-fin");
-  if (de) de.onchange = () => { AN.deb = de.value; rendreAnalyse(); };
-  if (fi) fi.onchange = () => { AN.fin = fi.value; rendreAnalyse(); };
+  const bouge = k => { const d = new Date(AN.cm + "-15T12:00:00Z"); d.setUTCMonth(d.getUTCMonth() + k); AN.cm = d.toISOString().slice(0, 7); rendreAnalyse(); };
+  if ($("#an-prec")) { $("#an-prec").onclick = () => bouge(-1); $("#an-suiv").onclick = () => bouge(1); }
+  w.querySelectorAll("#an-cal .case[data-d]").forEach(c => c.onclick = () => {
+    const d = c.dataset.d;
+    if (!AN.deb || AN.fin) { AN.deb = d; AN.fin = ""; } else if (d < AN.deb) { AN.fin = AN.deb; AN.deb = d; } else AN.fin = d;
+    rendreAnalyse();
+  });
 }
 
 /* ═════════ To-do : motivation du mois, semaine, tâches, idées, notes, liens ═════════ */
@@ -1217,7 +1261,7 @@ function anneau(f, t) {
 function rendreTodo() {
   const w = $("#todo-wrap"); if (!w) return;
   const maintenant = new Date(), aujL = maintenant.toLocaleDateString("en-CA"), mi = maintenant.getMonth();
-  if (!TD.jour) TD.jour = aujL;
+  TD.jour = aujL;   // la semaine sert juste à voir la date ; ce qui n'est pas fait passe au lendemain
   const T = D.taches || [];
   const lun = lundiDe(aujL), jours = [0, 1, 2, 3, 4, 5, 6].map(i => plusJours(lun, i));
   const duJour = T.filter(x => x.qui === "moi" && (x.jour === TD.jour || (TD.jour === aujL && x.jour < aujL && !x.fait)));
@@ -1235,16 +1279,16 @@ function rendreTodo() {
   const claude = T.filter(x => x.qui === "claude" && (!x.fait || x.jour >= plusJours(aujL, -7)));
   const nomJ = TD.jour === aujL ? "aujourd'hui" : JOURS3[new Date(TD.jour + "T12:00:00Z").getUTCDay()] + " " + ddmm(TD.jour);
   w.innerHTML = `
-    <div class="motiv"><img src="img/motiv-${String(mi + 1).padStart(2, "0")}.jpg?v=5" alt="" onload="this.parentNode.classList.add('img-ok')" onerror="this.remove()">
+    <div class="motiv"><img src="img/motiv-${String(mi + 1).padStart(2, "0")}.jpg?v=6" alt="" onload="this.parentNode.classList.add('img-ok')" onerror="this.remove()">
       <div class="m">${MOIS[mi]} · objectif 100 KD</div><div class="q">${PHRASES[mi]}</div></div>
-    <div class="semaine" id="td-sem">${jours.map(iso => { const d = new Date(iso + "T12:00:00Z");
+    <div class="semaine petite" id="td-sem">${jours.map(iso => { const d = new Date(iso + "T12:00:00Z");
       const reste = T.filter(x => x.qui === "moi" && x.jour === iso && !x.fait).length;
-      return `<button data-d="${iso}" class="${iso === aujL ? "auj" : ""} ${iso === TD.jour && iso !== aujL ? "sel" : ""}">
+      return `<button tabindex="-1" class="${iso === aujL ? "auj" : ""}">
         <span class="js">${JOURS3[d.getUTCDay()].slice(0, 3)}</span><span class="n">${d.getUTCDate()}</span><span class="pt ${reste ? "t" : ""}"></span></button>`; }).join("")}</div>
     <div class="carte-t"><div class="anneau">${anneau(faitesJ, duJour.length)}
       <div><div class="t1">${faitesJ} / ${duJour.length} faites</div><div class="t2">${nomJ} · 🔥 ${serie} jour${serie > 1 ? "s" : ""} rentable${serie > 1 ? "s" : ""} d'affilée · ✅ ${semFaites} cette semaine</div></div></div></div>
     <div class="carte-t"><div class="seg">${Object.entries(TYPES).map(([k, [e, l]]) => `<button data-t="${k}" class="${TD.type === k ? "actif" : ""}">${e} ${l}</button>`).join("")}</div>
-      <div class="ajout" style="margin-top:4px"><input id="todo-txt" maxlength="300" placeholder="${{ moi: "Une tâche pour " + nomJ + "…", idee: "Une idée à garder…", note: "Une note…", lien: "Colle un lien (https://…) + un mot" }[TD.type]}"><button id="todo-add">Ajouter</button></div></div>
+      <div class="ajout" style="margin-top:4px"><textarea id="todo-txt" class="todo-txt" rows="1" maxlength="300" placeholder="${{ moi: "Nouvelle tâche…", idee: "Une idée…", note: "Une note…", lien: "Colle un lien…" }[TD.type]}"></textarea><button id="todo-add" style="height:48px">Ajouter</button></div></div>
     ${carte("✅ À faire · " + nomJ, aFaire, "Rien. Ajoute ta première tâche 👆")}
     ${faites.length ? `<button class="faites-tog" id="td-faites">${TD.faites ? "▾" : "▸"} ${faites.length} faite${faites.length > 1 ? "s" : ""}</button>${TD.faites ? carte("Faites", faites, "") : ""}` : ""}
     ${carte("🤖 Claude s'en occupe", claude, "Rien en cours.")}
@@ -1253,9 +1297,9 @@ function rendreTodo() {
     ${carte("🔗 Liens", T.filter(x => x.qui === "lien"), "Garde tes liens utiles ici.")}`;
   const ajouter = () => { const v = $("#todo-txt").value.trim(); if (v) tache({ action: "ajout", qui: TD.type, texte: v, jour: TD.jour }); };
   $("#todo-add").onclick = ajouter;
-  $("#todo-txt").onkeydown = e => { if (e.key === "Enter") ajouter(); };
+  const zt = $("#todo-txt");
+  zt.oninput = () => { zt.style.height = "auto"; zt.style.height = zt.scrollHeight + "px"; };   // grandit avec le texte
   w.querySelectorAll(".seg button").forEach(b => b.onclick = () => { TD.type = b.dataset.t; rendreTodo(); });
-  w.querySelectorAll("#td-sem button").forEach(b => b.onclick = () => { TD.jour = b.dataset.d; rendreTodo(); });
   const tg = $("#td-faites"); if (tg) tg.onclick = () => { TD.faites = !TD.faites; rendreTodo(); };
   w.querySelectorAll("input[data-id]").forEach(c => c.onchange = () => tache({ action: "coche", id: c.dataset.id, fait: c.checked }));
   w.querySelectorAll("button[data-suppr]").forEach(b => b.onclick = () => { if (confirm("Supprimer ?")) tache({ action: "suppr", id: b.dataset.suppr }); });
@@ -1267,7 +1311,7 @@ function rendrePlan() {
   const finis = joursFinis(), d7 = finis.slice(-7), a7 = agreger(d7);
   const caJour = d7.length ? a7.ca / d7.length : 0;
   const pal = [1, 3, 6, 12, 25, 50, 100];
-  const desc = { 1: "Premier palier", 3: "La machine tourne", 6: "On recrute", 12: "Étape du 30/11", 25: "Plusieurs boutiques", 50: "Une vraie marque", 100: "LE BUT 🏆" };
+  const desc = { 1: "Premier palier", 3: "La machine tourne", 6: "On recrute", 12: "Dix mille par jour, passés", 25: "Un quart du chemin", 50: "La moitié du but", 100: "LE BUT 🏆" };
   const prochain = pal.find(p => caJour < p * 1000) || 100;
   // progression : chaque palier occupe la même place sur la barre
   const idx = pal.indexOf(prochain), bas = idx ? pal[idx - 1] * 1000 : 0, haut = prochain * 1000;
@@ -1282,7 +1326,7 @@ function rendrePlan() {
   for (let i = 0; i < 14 && der; i++) {
     const iso = plusJours(der, i), dd = new Date(iso + "T12:00:00Z"), js = dd.getUTCDay();
     const l = abosDuJour(iso).map(a => ({ nom: a.nom, m: a.montant }));
-    if (js === 5) l.push({ nom: "Judy ≈", m: judy });
+    if (js === 5) l.push({ nom: "Judy (fournisseur, estimé)", m: judy });
     const thb = dd.getUTCDate() === 25;
     if (l.length || thb) {
       const s = l.reduce((x, a) => x + a.m, 0); total += s;
@@ -1290,6 +1334,23 @@ function rendrePlan() {
         <div class="l">${thb ? '<span class="pastille-thb"></span> THB ' : ""}${l.map(a => a.nom).join(" · ")}</div><div class="m">${s ? eur(s) : ""}</div></div>`;
     }
   }
+  // Ce qu'il faut faire ce mois pour payer le THB (2 095 $ le 25) + tous les coûts fixes du mois
+  const ym = der.slice(0, 7), finM = new Date(Date.UTC(+ym.slice(0, 4), +ym.slice(5, 7), 0)).getUTCDate();
+  let fixesMois = 0; for (let j = 1; j <= finM; j++) fixesMois += fixesJour(ym + "-" + String(j).padStart(2, "0"));
+  const besoin = 2095 + fixesMois, fait = agreger(finis.filter(x => x.startsWith(ym))).contribution;
+  const resteJ = finM - (+der.slice(8, 10)) + 1, reste = Math.max(0, besoin - fait);
+  const parJour = resteJ ? reste / resteJ : 0, marge7 = a7.ca ? a7.contribution / a7.ca : 0;
+  const caParJour = marge7 > 0 ? parJour / marge7 : 0, pctFait = Math.max(0, Math.min(1, fait / besoin));
+  const thbHtml = `<section><h2><span style="color:#a855f7">●</span> THB + coûts du mois <span>${MOIS[+ym.slice(5, 7) - 1]}</span></h2>
+      <div class="kpis" style="margin-bottom:6px">
+        <div class="k large"><div class="l">à gagner en ${MOIS[+ym.slice(5, 7) - 1]} (marge, après pub et produits)</div><div class="v">${eur(besoin)}</div>
+          <div class="s">THB ${eur(2095)} + abonnements, Shopify, VA, frais ${eur(fixesMois)}</div></div>
+        <div class="k"><div class="l">déjà fait</div><div class="v" style="color:var(--vert)">${eur(Math.max(0, fait))}</div><div class="s">${Math.round(pctFait * 100)} %</div></div>
+        <div class="k"><div class="l">reste</div><div class="v">${eur(reste)}</div><div class="s">en ${resteJ} jour${resteJ > 1 ? "s" : ""}</div></div>
+      </div>
+      <div class="barre" style="height:14px"><div style="width:${(pctFait * 100).toFixed(1)}%;background:linear-gradient(90deg,#7c3aed,#a855f7)"></div></div>
+      <div class="obj-lib" style="margin:10px 0 0">${reste > 0 ? `il faut <b style="color:var(--texte)">${eur(parJour)} de marge par jour</b>${caParJour ? `, soit environ <b style="color:var(--texte)">${eur(caParJour)} de CA par jour</b> à ta marge actuelle (${pct(marge7)})` : ""}` : "<b style='color:var(--vert)'>Couvert ✅ Tout ce qui rentre en plus, c'est du bénéf.</b>"}</div>
+    </section>`;
   w.innerHTML = `
     <div class="titre-page">Objectif 🚀<small>CA par jour · moyenne des 7 derniers jours</small></div>
     <div class="carte-t" style="background:linear-gradient(160deg,#2a1000,#0b0b0b 70%);border-color:#3a1d00">
@@ -1297,7 +1358,7 @@ function rendrePlan() {
       <div class="barre" style="height:16px;margin-top:16px"><div style="width:${(prog * 100).toFixed(1)}%"></div></div>
       <div class="obj-lib" style="margin:8px 0 0">tu es à <b style="color:var(--texte);font-size:18px">${eur(caJour)}</b> / jour · prochain palier <b style="color:var(--accent)">${prochain} KD</b> : encore ${eur(Math.max(0, haut - caJour))} / jour</div>
       <div class="marches">${pal.map(p => `<div class="marche ${caJour >= p * 1000 ? "ok" : p === prochain ? "ici" : p === 100 ? "but" : ""}">
-        <div class="kd">${p} KD</div><div class="d">${desc[p]}</div><div>${caJour >= p * 1000 ? "✅" : p === prochain ? "👉" : ""}</div></div>`).join("")}</div>
+        <div class="kd">${p} KD</div><div class="d">${desc[p]}</div><div>${caJour >= p * 1000 ? "⭐" : p === prochain ? "👉" : ""}</div></div>`).join("")}</div>
     </div>
     <div class="stats3" style="margin-bottom:12px">
       <div><b class="${mois.net < 0 ? "m-non" : "m-ok"}">${signe(mois.net)}</b><small>bénéf de ${MOIS[+der.slice(5, 7) - 1] || ""} au ${finis.length ? ddmm(finis[finis.length - 1]) : ""}</small></div>
@@ -1306,8 +1367,10 @@ function rendrePlan() {
     </div>
     <section><h2>📅 Les 14 prochains jours <span>ce qui va sortir</span></h2>
       ${h || `<div class="vide-msg">Rien de prévu.</div>`}
-      <div class="prev-j"><div class="q">Total</div><div class="l">hors THB · Judy estimée sur la dernière semaine</div><div class="m">${eur(total)}</div></div>
-    </section>`;
+      <div class="prev-j"><div class="q">Total</div><div class="l">sans le THB</div><div class="m">${eur(total)}</div></div>
+      <div class="note">Judy = ce que tu lui paies le vendredi, estimé sur ton coût produits des 7 derniers jours. Frais virement Judy = 25 $ prélevés par Slash à chaque paiement.</div>
+    </section>
+    ${thbHtml}`;
 }
 
 function rendreRemb(dates) {
@@ -1368,6 +1431,7 @@ async function entrer(jeton, mdp, silencieux) {
     $("#tableau").classList.remove("cache");
     SEL_A = null; SEL_B = null; CAL_AN = null; CAL_MOIS = null;
     construirePeriodes(); rendreMaj(); rendre();
+    if (!silencieux && window.ouvrirTodo) ouvrirTodo();   // l'app s'ouvre sur la To-do
   } catch (e) {
     const msg = /operation-specific|OperationError|decrypt/i.test(String(e))
       ? "Mot de passe incorrect." : (e.message || "Échec.");
@@ -1459,6 +1523,7 @@ function organiserPages() {
     $("#semaine").classList.toggle("cache", i > 1);
   };
   pages.addEventListener("scroll", suivre); suivre();
+  window.ouvrirTodo = () => requestAnimationFrame(() => { pages.style.scrollBehavior = "auto"; pages.scrollLeft = 2 * pages.clientWidth; pages.style.scrollBehavior = ""; suivre(); });
 }
 organiserPages();
 
