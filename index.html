@@ -383,9 +383,24 @@
   .agent b{display:block;font-size:13.5px;line-height:1.2}
   .agent small{color:var(--doux);font-size:11.5px}
   .tache span.edit-ok{cursor:text}
-  textarea.tache-edit{flex:1;min-width:0;font:inherit;font-size:16px;line-height:1.4;padding:8px 10px;
-         border-radius:10px;border:1px solid var(--accent);background:var(--carte2);color:var(--texte);
-         resize:none;overflow:hidden;min-height:40px}
+  /* Édition dans un petit panneau (préférence du propriétaire 18/11) : tout le texte visible, au centre */
+  #edit-fond{position:fixed;inset:0;z-index:40;display:grid;place-items:center;
+         padding:20px 18px calc(20px + env(safe-area-inset-bottom));
+         background:rgba(0,0,0,.34);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+  .edit-boite{width:min(430px,100%);background:var(--carte2);border:1px solid var(--bord);
+         border-radius:20px;padding:20px;box-shadow:var(--ombre);
+         backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px)}
+  .edit-boite h3{font-size:14px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+  .edit-boite h3 small{color:var(--doux);font-weight:500}
+  .edit-boite textarea{width:100%;font:inherit;font-size:16px;line-height:1.45;padding:12px 13px;
+         border-radius:13px;border:1px solid var(--accent);background:var(--carte);color:var(--texte);
+         resize:none;overflow:auto;min-height:110px;max-height:46vh}
+  .edit-boite textarea:focus{outline:none}
+  .edit-actions{display:flex;gap:9px;margin-top:14px}
+  .edit-actions button{flex:1;padding:13px;border-radius:13px;font-size:15px;font-weight:700;
+         font-family:inherit;border:1px solid var(--bord)}
+  .edit-actions .annuler{background:var(--carte);color:var(--doux)}
+  .edit-actions .sauver{background:var(--accent);color:var(--sur-accent);border-color:transparent}
   #verrou{position:fixed;inset:0;z-index:50;display:grid;place-items:center;background:var(--fond)}
   #verrou .boite{text-align:center;padding:24px;max-width:320px}
   #verrou .cadenas{font-size:44px;margin-bottom:14px}
@@ -1380,28 +1395,44 @@ function rendreTodo() {
   const tg = $("#td-faites"); if (tg) tg.onclick = () => { TD.faites = !TD.faites; rendreTodo(); };
   w.querySelectorAll("input[data-id]").forEach(c => c.onchange = () => tache({ action: "coche", id: c.dataset.id, fait: c.checked }));
   w.querySelectorAll("button[data-suppr]").forEach(b => b.onclick = () => { if (confirm("Supprimer ?")) tache({ action: "suppr", id: b.dataset.suppr }); });
-  // Édition DIRECTE (18/11) : on touche le texte, on écrit — pas de pop-up.
+  // Édition dans un PETIT PANNEAU (préférence du propriétaire 18/11, remplace l'inline) :
+  // on touche une ligne — tâche, idée, note ou lien — et tout le texte s'ouvre
+  // dans une zone confortable, avec Sauvegarder / Annuler.
   w.querySelectorAll(".tache span[data-edit]").forEach(sp => sp.onclick = ev => {
     if (ev.target.tagName === "A") return;   // un lien reste un lien
     const t = (D.taches || []).find(x => String(x.id) === sp.dataset.edit);
-    if (!t) return;
-    const z = document.createElement("textarea");
-    z.className = "tache-edit"; z.maxLength = 300; z.rows = 1; z.value = t.texte;
-    sp.replaceWith(z);
-    const ajuste = () => { z.style.height = "auto"; z.style.height = z.scrollHeight + "px"; };
-    z.oninput = ajuste;
-    requestAnimationFrame(() => { ajuste(); z.focus(); z.setSelectionRange(z.value.length, z.value.length); });
-    let fini = false;
-    const valide = () => { if (fini) return; fini = true;
-      const v = z.value.trim();
-      if (v && v !== t.texte) tache({ action: "modif", id: t.id, texte: v });
-      else rendreTodo(); };
-    z.onblur = valide;
-    z.onkeydown = e => {
-      if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); z.blur(); }
-      if (e.key === "Escape") { fini = true; rendreTodo(); }
-    };
+    if (t) ouvrirEdition(t);
   });
+}
+
+/* Le panneau d'édition : glass, centré, tout le texte visible d'un coup. */
+function ouvrirEdition(t) {
+  const [emoji, nom] = TYPES[t.qui] || ["🧠", "Conseil"];
+  const fond = document.createElement("div");
+  fond.id = "edit-fond";
+  fond.innerHTML = `<div class="edit-boite"><h3>${emoji} ${nom} <small>· modifier</small></h3>
+    <textarea maxlength="300"></textarea>
+    <div class="edit-actions"><button class="annuler">Annuler</button>
+    <button class="sauver">Sauvegarder</button></div></div>`;
+  document.body.appendChild(fond);
+  const z = fond.querySelector("textarea");
+  z.value = t.texte;
+  const ajuste = () => { z.style.height = "auto"; z.style.height = Math.min(z.scrollHeight + 2, innerHeight * .46) + "px"; };
+  z.oninput = ajuste;
+  requestAnimationFrame(() => { ajuste(); z.focus(); z.setSelectionRange(z.value.length, z.value.length); });
+  const fermer = () => fond.remove();
+  const sauver = () => {
+    const v = z.value.trim();
+    fermer();
+    if (v && v !== t.texte) tache({ action: "modif", id: t.id, texte: v });
+  };
+  fond.querySelector(".annuler").onclick = fermer;
+  fond.querySelector(".sauver").onclick = sauver;
+  fond.onclick = e => { if (e.target === fond) fermer(); };   // toucher à côté = annuler
+  z.onkeydown = e => {
+    if (e.key === "Escape") fermer();
+    if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) sauver();
+  };
 }
 
 /* ═════════ Objectif : 100 KD, et ce qui va sortir ═════════ */
@@ -1611,12 +1642,17 @@ $("#btn-faceid").onclick = async () => {
     localStorage.removeItem("fid"); majBoutonFaceid(); flash("Verrou Face ID désactivé"); return;
   }
   try {
+    // Tout force l'authentificateur DU téléphone (Face ID) : attachment platform,
+    // residentKey, hints client-device — jamais la feuille « autre appareil ».
     const cred = await navigator.credentials.create({ publicKey: {
       challenge: crypto.getRandomValues(new Uint8Array(32)),
       rp: { name: "Suivi" },
       user: { id: crypto.getRandomValues(new Uint8Array(16)), name: "suivi", displayName: "Suivi" },
       pubKeyCredParams: [{ type: "public-key", alg: -7 }, { type: "public-key", alg: -257 }],
-      authenticatorSelection: { authenticatorAttachment: "platform", userVerification: "required" },
+      authenticatorSelection: { authenticatorAttachment: "platform", userVerification: "required",
+                                residentKey: "preferred" },
+      hints: ["client-device"],
+      attestation: "none",
       timeout: 60000,
     } });
     localStorage.setItem("fid", B64V.enc(cred.rawId));
@@ -1635,9 +1671,13 @@ function montrerVerrou(apres) {
   document.body.appendChild(el);
   const tenter = async (silencieux) => {
     try {
+      // transports ["internal"] + hints client-device : Safari va DIRECT sur
+      // Face ID, sans proposer un autre appareil ni le remplissage automatique.
       await navigator.credentials.get({ publicKey: {
         challenge: crypto.getRandomValues(new Uint8Array(32)),
-        allowCredentials: [{ type: "public-key", id: B64V.dec(localStorage.getItem("fid")) }],
+        allowCredentials: [{ type: "public-key", id: B64V.dec(localStorage.getItem("fid")),
+                             transports: ["internal"] }],
+        hints: ["client-device"],
         userVerification: "required", timeout: 60000,
       } });
       el.remove(); apres();
