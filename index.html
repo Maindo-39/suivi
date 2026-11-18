@@ -446,7 +446,7 @@
   </section>
 
   <section>
-    <h2>Calendrier <span>choisis un jour</span></h2>
+    <h2>Calendrier <span>un jour, ou début → fin</span></h2>
     <div class="cal-tete">
       <button class="cal-prec" title="Mois précédent">&#8249;</button>
       <div class="mois cal-mois"></div>
@@ -542,7 +542,7 @@ const MOIS = ["janvier", "février", "mars", "avril", "mai", "juin", "juillet",
               "août", "septembre", "octobre", "novembre", "décembre"];
 
 let OUVERTURE = true;   // première ouverture (ou retour après une longue pause) → To-do + aujourd'hui
-let D = null, PERIODE = 1, SEL_A = null, SEL_B = null, SEL_ADS = null, CAL_AN = null, CAL_MOIS = null;
+let D = null, PERIODE = 1, SEL_A = null, SEL_B = null, SEL_ADS = null, SEL_ADS_B = null, CAL_AN = null, CAL_MOIS = null;
 
 const PERIODES = [
   { l: "Auj.", j: 1 }, { l: "3 j", j: 3 }, { l: "7 j", j: 7 },
@@ -658,7 +658,8 @@ function rendre() {
   const dates = fenetre(PERIODE);
   const a = agreger(dates);
   const p = agreger(fenetre(PERIODE, 1));
-  const datesAds = SEL_ADS ? [SEL_ADS] : dates;   // la page Ads suit SON calendrier ; Compta jamais
+  // la page Ads suit SON calendrier (un jour, ou une période début → fin) ; Compta jamais
+  const datesAds = SEL_ADS ? (SEL_ADS_B ? toutesLesDates().filter(d => d >= SEL_ADS && d <= SEL_ADS_B) : [SEL_ADS]) : dates;
   const c = classe(a);
   // La journée de Chicago en cours (démarre à 13 h, heure de Bangkok) n'a pas de verdict :
   // le matin à Bangkok elle est encore vide, et « juste à l'équilibre » sur des zéros trompe.
@@ -888,8 +889,16 @@ function rendreCalendrier() {
   // Calendrier ADS : indépendant — pilote UNIQUEMENT la page Ads.
   const calA = $("#cal2");
   if (calA) {
-    calA.innerHTML = grille(SEL_ADS, null);
-    calA.querySelectorAll(".case[data-d]").forEach(el => el.onclick = () => { SEL_ADS = SEL_ADS === el.dataset.d ? null : el.dataset.d; rendre(); });
+    calA.innerHTML = grille(SEL_ADS, SEL_ADS_B);
+    // 1er appui = début, 2e = fin (période), 3e = on recommence — comme le calendrier Compta
+    calA.querySelectorAll(".case[data-d]").forEach(el => el.onclick = () => {
+      const d = el.dataset.d;
+      if (!SEL_ADS || SEL_ADS_B) { SEL_ADS = d; SEL_ADS_B = null; }
+      else if (d === SEL_ADS) { SEL_ADS = null; }
+      else if (d < SEL_ADS) { SEL_ADS_B = SEL_ADS; SEL_ADS = d; }
+      else SEL_ADS_B = d;
+      rendre();
+    });
   }
   rendreSelection();
 }
@@ -1407,7 +1416,7 @@ function construirePeriodes() {
   $("#periodes").innerHTML = PERIODES.map(p =>
     `<button data-j="${p.j}" class="${p.j === PERIODE ? "actif" : ""}">${p.l}</button>`).join("");
   $("#periodes").querySelectorAll("button").forEach(b => {
-    b.onclick = () => { PERIODE = +b.dataset.j; SEL_ADS = null; construirePeriodes(); rendre(); };
+    b.onclick = () => { PERIODE = +b.dataset.j; SEL_ADS = null; SEL_ADS_B = null; construirePeriodes(); rendre(); };
   });
 }
 
@@ -1431,7 +1440,7 @@ async function entrer(jeton, mdp, silencieux) {
     localStorage.setItem("m", mdp);
     $("#connexion").classList.add("cache");
     $("#tableau").classList.remove("cache");
-    if (OUVERTURE) { PERIODE = 1; SEL_ADS = null; }   // Compta et Ads s'ouvrent sur aujourd'hui
+    if (OUVERTURE) { PERIODE = 1; SEL_ADS = null; SEL_ADS_B = null; }   // Compta et Ads s'ouvrent sur aujourd'hui
     SEL_A = null; SEL_B = null; CAL_AN = null; CAL_MOIS = null;
     construirePeriodes(); rendreMaj(); rendre();
     if (OUVERTURE && window.ouvrirTodo) { OUVERTURE = false; ouvrirTodo(); }   // l'app s'ouvre sur la To-do
