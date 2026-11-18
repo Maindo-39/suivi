@@ -3,7 +3,14 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#000000">
+<meta name="theme-color" content="#F2EFE9">
+<script>
+/* Thème AVANT le premier rendu (sinon flash blanc/noir). Clair par défaut (18/11). */
+(function(){
+  if ((localStorage.getItem("theme") || "clair") === "sombre")
+    document.documentElement.dataset.theme = "sombre";
+})();
+</script>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Suivi">
@@ -12,21 +19,48 @@
 <link rel="apple-touch-icon" href="icone.png">
 <title>Suivi</title>
 <style>
+  /* ═══ Deux thèmes (18/11) : CLAIR par défaut (blanc/beige cassé + orange), sombre = noir + orange ═══ */
   :root{
-    --fond:#000; --carte:#111; --carte2:#1a1a1a; --bord:#242424;
+    color-scheme:light;
+    --fond:#F2EFE9; --carte:rgba(255,255,255,.66); --carte2:rgba(255,255,255,.78);
+    --bord:rgba(31,26,18,.08);
+    --texte:#211d17; --doux:#8d8575; --tres-doux:#bdb5a4;
+    --vert:#15935f; --vert-fond:rgba(21,147,95,.1); --vert-bord:rgba(21,147,95,.28);
+    --orange:#c98a06; --orange-fond:rgba(224,164,11,.12); --orange-bord:rgba(224,164,11,.3);
+    --rouge:#d94040; --rouge-fond:rgba(217,64,64,.09); --rouge-bord:rgba(217,64,64,.26);
+    --accent:#ff7a00; --accent2:#e06500; --accent-fond:rgba(255,122,0,.1); --accent-bord:rgba(255,122,0,.3);
+    --sur-accent:#fff;
+    --grille:rgba(31,26,18,.08); --nav-fond:rgba(249,247,243,.78);
+    --halo1:rgba(255,122,0,.12); --halo2:rgba(255,177,92,.14);
+    --ombre:0 10px 30px rgba(84,66,37,.07);
+  }
+  html[data-theme="sombre"]{
+    color-scheme:dark;
+    --fond:#000; --carte:rgba(22,22,22,.72); --carte2:rgba(34,34,34,.82);
+    --bord:rgba(255,255,255,.08);
     --texte:#f7f7f7; --doux:#9b9b9b; --tres-doux:#5e5e5e;
-    --vert:#34d399; --vert-fond:#0b2a20;
-    --orange:#facc15; --orange-fond:#2e2706;
-    --rouge:#ff5a5a; --rouge-fond:#331012;
-    --accent:#ff7a00; --accent2:#ffb15c; --accent-fond:#2a1400;
+    --vert:#34d399; --vert-fond:rgba(52,211,153,.1); --vert-bord:rgba(52,211,153,.3);
+    --orange:#facc15; --orange-fond:rgba(250,204,21,.1); --orange-bord:rgba(250,204,21,.28);
+    --rouge:#ff5a5a; --rouge-fond:rgba(255,90,90,.1); --rouge-bord:rgba(255,90,90,.3);
+    --accent:#ff7a00; --accent2:#ffb15c; --accent-fond:rgba(255,122,0,.13); --accent-bord:rgba(255,122,0,.35);
+    --sur-accent:#000;
+    --grille:rgba(255,255,255,.1); --nav-fond:rgba(8,8,8,.78);
+    --halo1:rgba(255,122,0,.12); --halo2:rgba(255,77,0,.08);
+    --ombre:0 10px 30px rgba(0,0,0,.45);
   }
   *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
   body{
     background:var(--fond); color:var(--texte);
     font:400 16px/1.45 -apple-system,BlinkMacSystemFont,"SF Pro Text",Inter,system-ui,sans-serif;
-    padding:max(12px,env(safe-area-inset-top)) 14px calc(96px + env(safe-area-inset-bottom));
+    padding:max(14px,env(safe-area-inset-top)) 16px calc(100px + env(safe-area-inset-bottom));
     max-width:560px; margin:0 auto; -webkit-font-smoothing:antialiased;
   }
+  /* halos doux derrière les cartes : donnent vie au flou (glassmorphism) */
+  body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;
+    background:radial-gradient(55% 34% at 85% -4%,var(--halo1),transparent 70%),
+               radial-gradient(48% 30% at -8% 28%,var(--halo2),transparent 70%),
+               radial-gradient(50% 30% at 70% 90%,var(--halo1),transparent 70%),
+               var(--fond)}
   .cache{display:none!important}
 
   #connexion{padding-top:11vh}
@@ -43,23 +77,23 @@
   input:focus{outline:none;border-color:var(--accent)}
   .aide{font-size:12px;color:var(--tres-doux);margin-top:7px;line-height:1.5}
   button.principal{
-    width:100%;margin-top:26px;padding:16px;background:var(--accent);color:#000;
-    border:none;border-radius:13px;font-size:16px;font-weight:700;font-family:inherit;
+    width:100%;margin-top:26px;padding:16px;background:var(--accent);color:var(--sur-accent);
+    border:none;border-radius:14px;font-size:16px;font-weight:700;font-family:inherit;
   }
   button.principal:disabled{opacity:.45}
   #erreur{
     margin-top:16px;padding:13px 15px;background:var(--rouge-fond);
-    border:1px solid #57262b;border-radius:11px;color:var(--rouge);font-size:14px;
+    border:1px solid var(--rouge-bord);border-radius:12px;color:var(--rouge);font-size:14px;
   }
 
-  header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+  header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
   .maj{font-size:12px;color:var(--doux);display:flex;align-items:center;gap:7px;white-space:nowrap}
   .maj b{color:var(--texte);font-weight:600;font-variant-numeric:tabular-nums}
   .pastille{width:7px;height:7px;border-radius:50%;background:var(--vert);flex:none}
   .maj.vieux .pastille{background:var(--orange)}
   .maj.vieux b{color:var(--orange)}
   .icone{
-    width:34px;height:34px;border-radius:10px;background:var(--carte);
+    width:36px;height:36px;border-radius:12px;background:var(--carte);
     border:1px solid var(--bord);color:var(--doux);font-size:15px;
     display:grid;place-items:center;flex:none;
   }
@@ -69,12 +103,13 @@
   .flash{
     position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom));
     transform:translateX(-50%);background:var(--carte2);border:1px solid var(--bord);
+    backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
     color:var(--texte);font-size:13px;padding:10px 18px;border-radius:999px;
-    z-index:9;box-shadow:0 6px 24px rgba(0,0,0,.5);
+    z-index:9;box-shadow:var(--ombre);white-space:nowrap;
   }
-  .flash.mauvais{border-color:#57262b;color:var(--rouge)}
+  .flash.mauvais{border-color:var(--rouge-bord);color:var(--rouge)}
 
-  .periodes{display:flex;gap:6px;margin-bottom:16px}
+  .periodes{display:flex;gap:7px;margin-bottom:18px}
   .onglets{display:flex;gap:6px;margin-bottom:14px}
   .onglets button{flex:1;padding:9px;border:1px solid var(--bord);background:var(--carte);
                   color:var(--doux);border-radius:10px;font-size:14px;font-weight:600}
@@ -84,16 +119,17 @@
   .pages::-webkit-scrollbar{display:none}
   .page{flex:0 0 100%;min-width:0;scroll-snap-align:start;padding:0 2px}
   .periodes button{
-    flex:1;padding:9px 0;background:var(--carte);border:1px solid var(--bord);
-    border-radius:10px;color:var(--doux);font-size:13px;font-weight:600;font-family:inherit;
+    flex:1;padding:10px 0;background:var(--carte);border:1px solid var(--bord);
+    border-radius:12px;color:var(--doux);font-size:13px;font-weight:600;font-family:inherit;
   }
-  .periodes button.actif{background:var(--accent);border-color:var(--accent);color:#000}
+  .periodes button.actif{background:var(--accent);border-color:var(--accent);color:var(--sur-accent)}
 
-  .hero{border-radius:20px;padding:24px 20px;margin-bottom:12px;text-align:center;
-        border:1px solid var(--bord)}
-  .hero.ok{background:var(--vert-fond);border-color:#1c5b45}
-  .hero.moyen{background:var(--orange-fond);border-color:#5e4a12}
-  .hero.non{background:var(--rouge-fond);border-color:#5e2429}
+  .hero{border-radius:24px;padding:28px 20px;margin-bottom:16px;text-align:center;
+        border:1px solid var(--bord);
+        backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
+  .hero.ok{background:var(--vert-fond);border-color:var(--vert-bord)}
+  .hero.moyen{background:var(--orange-fond);border-color:var(--orange-bord)}
+  .hero.non{background:var(--rouge-fond);border-color:var(--rouge-bord)}
   .verdict{font-size:29px;font-weight:800;letter-spacing:-.9px;line-height:1.1}
   .hero.ok .verdict{color:var(--vert)} .hero.moyen .verdict{color:var(--orange)}
   .hero.non .verdict{color:var(--rouge)}
@@ -134,7 +170,7 @@
   .tache .qui{font-size:11px;font-weight:700;color:var(--accent);border:1px solid var(--accent);border-radius:6px;padding:1px 6px;flex:0 0 auto}
   .ajout{display:flex;gap:8px;margin-top:12px}
   .ajout input{flex:1;min-width:0;font-size:16px;padding:12px;border-radius:12px;border:1px solid var(--bord);background:var(--carte2);color:var(--texte)}
-  .ajout button{font-size:16px;font-weight:700;padding:0 16px;border-radius:12px;border:0;background:var(--accent);color:#000}
+  .ajout button{font-size:16px;font-weight:700;padding:0 16px;border-radius:12px;border:0;background:var(--accent);color:var(--sur-accent)}
   .prev-j{display:flex;justify-content:space-between;align-items:baseline;padding:10px 0;border-bottom:1px solid var(--bord);gap:10px}
   .prev-j .q{font-weight:800;font-size:15px;flex:0 0 74px}
   .prev-j .l{flex:1;min-width:0;font-size:13px;color:var(--doux)}
@@ -145,8 +181,9 @@
           font-variant-numeric:tabular-nums}
   .sous{font-size:13px;color:var(--doux)}
 
-  .tuiles{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px}
-  .tuile{background:var(--carte);border:1px solid var(--bord);border-radius:15px;padding:13px 11px}
+  .tuiles{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:18px}
+  .tuile{background:var(--carte);border:1px solid var(--bord);border-radius:18px;padding:14px 12px;
+         backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
   .tuile .lib{font-size:10px;font-weight:700;color:var(--tres-doux);
               text-transform:uppercase;letter-spacing:.6px}
   .tuile .val{font-size:20px;font-weight:700;margin-top:5px;letter-spacing:-.5px;
@@ -154,13 +191,14 @@
   .tuile .det{font-size:11px;color:var(--doux);margin-top:2px}
   .hausse{color:var(--vert)} .baisse{color:var(--rouge)}
   /* Crédit Pinterest offert : bandeau doré tant qu'on est sous les 100 $. */
-  .pin-credit{background:var(--orange-fond);border:1px solid #4a3a10;border-radius:13px;
-    padding:12px 14px;font-size:12.5px;line-height:1.55;color:#e8cd94;margin-bottom:16px}
+  .pin-credit{background:var(--orange-fond);border:1px solid var(--orange-bord);border-radius:14px;
+    padding:12px 14px;font-size:12.5px;line-height:1.55;color:var(--doux);margin-bottom:18px}
   .pin-credit b{color:var(--orange);font-weight:700}
   .pin-star{color:var(--orange)}
 
   section{background:var(--carte);border:1px solid var(--bord);
-          border-radius:17px;padding:16px;margin-bottom:12px}
+          border-radius:22px;padding:18px;margin-bottom:16px;
+          backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);box-shadow:var(--ombre)}
   h2{font-size:12px;font-weight:700;color:var(--doux);text-transform:uppercase;
      letter-spacing:.8px;margin-bottom:13px;display:flex;justify-content:space-between;
      align-items:center;gap:10px}
@@ -178,15 +216,15 @@
     border:1px solid var(--bord);color:var(--texte);font-size:15px;font-family:inherit;
   }
   .cal-tete button:disabled{opacity:.25}
-  .cal{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}
-  .cal .jsem{font-size:10px;color:var(--tres-doux);text-align:center;padding-bottom:3px}
-  .cal .case{aspect-ratio:1;border-radius:9px;display:grid;place-items:center;
+  .cal{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+  .cal .jsem{font-size:10px;color:var(--tres-doux);text-align:center;padding-bottom:4px}
+  .cal .case{aspect-ratio:1;border-radius:10px;display:grid;place-items:center;
              font-size:12px;font-weight:600;background:var(--carte2);color:var(--tres-doux)}
   .cal .case.a{background:var(--vert-fond);color:var(--vert)}
   .cal .case.b{background:var(--orange-fond);color:var(--orange)}
   .cal .case.c{background:var(--rouge-fond);color:var(--rouge)}
   .cal .case.vide{background:transparent}
-  .cal .case.auj{background:var(--accent);color:#000;font-weight:900}   /* aujourd'hui : rempli en orange */
+  .cal .case.auj{background:var(--accent);color:var(--sur-accent);font-weight:900}   /* aujourd'hui : rempli en orange */
   .cal .case.dans{box-shadow:inset 0 0 0 1.5px var(--accent)}
   .cal .case.bout{outline:2px solid var(--accent);outline-offset:1px}
   .cal .case{position:relative}
@@ -208,7 +246,7 @@
   .ligne .nom .t{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .ligne .nom small{display:block;color:var(--tres-doux);font-size:11px;
                     overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .ligne .nom small.camp{color:#4a4857;font-size:10px}
+  .ligne .nom small.camp{color:var(--tres-doux);font-size:10px}
   .ligne .chiffres{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
   .ligne .chiffres b{font-weight:700}
   .ligne .chiffres small{display:block;color:var(--doux);font-size:11px}
@@ -229,8 +267,8 @@
   .camp-tete .sp{font-size:13px;color:var(--doux);white-space:nowrap;
                  font-variant-numeric:tabular-nums}
 
-  .alerte-remb{background:var(--rouge-fond);border:1px solid #57262b;border-radius:13px;
-               padding:13px 15px;margin-bottom:12px;font-size:14px;color:var(--rouge)}
+  .alerte-remb{background:var(--rouge-fond);border:1px solid var(--rouge-bord);border-radius:14px;
+               padding:13px 15px;margin-bottom:16px;font-size:14px;color:var(--rouge)}
 
   .regle{display:flex;gap:11px;padding:9px 0;font-size:14px;line-height:1.45;
          border-bottom:1px solid var(--bord)}
@@ -245,7 +283,7 @@
   /* ═══ Refonte 17/11 : barre du bas, boutique, semaine, to-do, analyse, objectif ═══ */
   .nav{position:fixed;left:0;right:0;bottom:0;z-index:20;display:flex;justify-content:center;
        padding:8px 10px calc(8px + env(safe-area-inset-bottom));
-       background:rgba(8,8,8,.86);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border-top:1px solid #1e1e1e}
+       background:var(--nav-fond);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-top:1px solid var(--bord)}
   .nav-in{display:flex;gap:4px;width:100%;max-width:560px}
   .nav button{flex:1;background:none;border:0;color:var(--tres-doux);font-weight:600;font-size:10.5px;font-family:inherit;
               display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px 0;border-radius:14px}
@@ -258,14 +296,15 @@
             background-image:linear-gradient(45deg,transparent 50%,var(--accent) 50%),linear-gradient(135deg,var(--accent) 50%,transparent 50%);
             background-position:calc(100% - 17px) 55%,calc(100% - 12px) 55%;background-size:5px 5px;background-repeat:no-repeat}
   .tete-d{display:flex;align-items:center;gap:8px}
-  .semaine{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-bottom:14px}
-  .semaine button{background:var(--carte);border:1px solid var(--bord);border-radius:14px;padding:7px 0 8px;
-                  color:var(--texte);font-family:inherit;display:flex;flex-direction:column;align-items:center;gap:2px}
+  .semaine{display:grid;grid-template-columns:repeat(7,1fr);gap:7px;margin-bottom:18px}
+  .semaine button{background:var(--carte);border:1px solid var(--bord);border-radius:15px;padding:8px 0 9px;
+                  color:var(--texte);font-family:inherit;display:flex;flex-direction:column;align-items:center;gap:2px;
+                  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
   .semaine button .js{font-size:10px;color:var(--doux);font-weight:700;text-transform:uppercase}
   .semaine button .n{font-size:17px;font-weight:800}
   .semaine button .pt{width:6px;height:6px;border-radius:50%;background:transparent}
-  .semaine button.auj{background:var(--accent);border-color:var(--accent);color:#000}
-  .semaine button.auj .js{color:#000}
+  .semaine button.auj{background:var(--accent);border-color:var(--accent);color:var(--sur-accent)}
+  .semaine button.auj .js{color:var(--sur-accent)}
   .semaine button.sel{outline:2px solid var(--accent2);outline-offset:1px}
   .semaine.petite{gap:4px} .semaine.petite button{padding:4px 0 5px;border-radius:11px;pointer-events:none}
   .semaine.petite button .n{font-size:14px} .semaine.petite button .js{font-size:9px}
@@ -280,32 +319,34 @@
   .chips::-webkit-scrollbar{display:none}
   .chips button{flex:0 0 auto;background:var(--carte);border:1px solid var(--bord);color:var(--doux);
                 font-weight:700;font-size:14px;font-family:inherit;padding:9px 14px;border-radius:999px}
-  .chips button.actif{background:var(--accent);border-color:var(--accent);color:#000}
+  .chips button.actif{background:var(--accent);border-color:var(--accent);color:var(--sur-accent)}
   .dates-libres{display:flex;gap:8px;align-items:center;margin-bottom:10px}
-  .dates-libres input{padding:10px;font-size:15px;color-scheme:dark}
-  .kpis{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:12px}
-  .kpis .k{background:var(--carte);border:1px solid var(--bord);border-radius:16px;padding:13px 14px}
-  .kpis .k.large{grid-column:1 / -1;background:linear-gradient(135deg,#1a0b00,#111 60%);border-color:#3a1d00}
+  .dates-libres input{padding:10px;font-size:15px}
+  .kpis{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:16px}
+  .kpis .k{background:var(--carte);border:1px solid var(--bord);border-radius:18px;padding:14px 15px;
+           backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+  .kpis .k.large{grid-column:1 / -1;background:var(--accent-fond);border-color:var(--accent-bord)}
   .kpis .k .l{font-size:11px;font-weight:700;color:var(--doux);text-transform:uppercase;letter-spacing:.6px}
   .kpis .k .v{font-size:26px;font-weight:900;letter-spacing:-.8px;margin-top:3px}
   .kpis .k.large .v{font-size:38px}
   .kpis .k .s{font-size:12px;color:var(--doux)}
-  .motiv{position:relative;border-radius:22px;overflow:hidden;min-height:230px;margin:0 0 12px;
-         display:flex;flex-direction:column;justify-content:flex-end;padding:20px;
+  .motiv{position:relative;border-radius:24px;overflow:hidden;min-height:230px;margin:0 0 16px;
+         display:flex;flex-direction:column;justify-content:flex-end;padding:20px;color:#fff;
          background:radial-gradient(120% 90% at 85% 0%,#ff7a00 0%,#7a2600 35%,#1a0800 65%,#000 100%);border:1px solid #3a1d00}
   .motiv img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
   .motiv.img-ok{min-height:0;aspect-ratio:16/9;padding:0}
   .motiv.img-ok::after,.motiv.img-ok .q,.motiv.img-ok .m{display:none}
   .motiv::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 30%,rgba(0,0,0,.85))}
   .motiv .q{position:relative;z-index:1;font-size:27px;font-weight:900;line-height:1.12;letter-spacing:-.6px}
-  .motiv .m{position:relative;z-index:1;font-size:12px;font-weight:800;color:var(--accent2);text-transform:uppercase;letter-spacing:1.4px;margin-bottom:8px}
+  .motiv .m{position:relative;z-index:1;font-size:12px;font-weight:800;color:#ffb15c;text-transform:uppercase;letter-spacing:1.4px;margin-bottom:8px}
   .anneau{display:flex;align-items:center;gap:16px}
   .anneau svg{width:86px;height:86px;flex:0 0 86px}
   .anneau .t1{font-size:22px;font-weight:900} .anneau .t2{font-size:13px;color:var(--doux)}
   .seg{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;background:var(--carte2);padding:4px;border-radius:14px;margin-bottom:8px}
   .seg button{background:none;border:0;color:var(--doux);font-weight:700;font-size:13px;font-family:inherit;padding:9px 0;border-radius:10px}
-  .seg button.actif{background:var(--accent);color:#000}
-  .carte-t{background:var(--carte);border:1px solid var(--bord);border-radius:18px;padding:14px 16px;margin-bottom:12px}
+  .seg button.actif{background:var(--accent);color:var(--sur-accent)}
+  .carte-t{background:var(--carte);border:1px solid var(--bord);border-radius:22px;padding:16px 18px;margin-bottom:16px;
+           backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);box-shadow:var(--ombre)}
   .carte-t .ent{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
   .carte-t .ent b{font-size:18px;font-weight:900}
   .carte-t .ent span{font-size:13px;color:var(--doux);font-weight:700}
@@ -313,23 +354,46 @@
   .tache input[type=checkbox]{appearance:none;-webkit-appearance:none;width:26px;height:26px;border-radius:50%;
        border:2px solid var(--tres-doux);background:none;padding:0;display:grid;place-items:center}
   .tache input[type=checkbox]:checked{background:var(--accent);border-color:var(--accent)}
-  .tache input[type=checkbox]:checked::after{content:"✓";color:#000;font-weight:900;font-size:15px}
-  .puce{flex:0 0 auto;font-size:20px}
+  .tache input[type=checkbox]:checked::after{content:"✓";color:var(--sur-accent);font-weight:900;font-size:15px}
+  .tache .puce{flex:0 0 auto;font-size:20px}   /* prime sur .tache span : la puce ne s'étire pas */
   .faites-tog{background:none;border:0;color:var(--doux);font-weight:700;font-size:13px;font-family:inherit;margin-top:8px}
   .obj-cible{text-align:center;padding:6px 0 4px}
   .obj-cible .c{font-size:64px;font-weight:900;letter-spacing:-3px;line-height:1;
                 background:linear-gradient(180deg,#ffb15c,#ff5a00);-webkit-background-clip:text;background-clip:text;color:transparent}
   .obj-cible .l{font-size:13px;color:var(--doux);font-weight:700;letter-spacing:1.2px;text-transform:uppercase}
-  .marches{display:flex;flex-direction:column-reverse;gap:6px;margin-top:12px}
-  .marche{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:14px;background:var(--carte2);border:1px solid var(--bord)}
+  .marches{display:flex;flex-direction:column-reverse;gap:7px;margin-top:14px}
+  .marche{display:flex;align-items:center;gap:12px;padding:11px 13px;border-radius:15px;background:var(--carte2);border:1px solid var(--bord)}
   .marche .kd{font-size:18px;font-weight:900;width:66px}
   .marche .d{flex:1;font-size:13px;color:var(--doux)}
-  .marche.ok{background:var(--vert-fond);border-color:#155a42} .marche.ok .kd{color:var(--vert)}
+  .marche.ok{background:var(--vert-fond);border-color:var(--vert-bord)} .marche.ok .kd{color:var(--vert)}
   .marche.ici{border-color:var(--accent);background:var(--accent-fond)} .marche.ici .kd{color:var(--accent)}
-  .marche.but{border-color:#ff5a00;background:linear-gradient(90deg,#2a1000,#111)} .marche.but .kd{color:var(--accent2)}
-  footer{text-align:center;font-size:11px;color:var(--tres-doux);margin-top:18px;line-height:1.7}
+  .marche.but{border-color:var(--accent-bord);background:var(--accent-fond)} .marche.but .kd{color:var(--accent2)}
+  footer{text-align:center;font-size:11px;color:var(--tres-doux);margin-top:22px;line-height:1.7}
   footer button{background:none;border:none;color:var(--tres-doux);
                 font-size:11px;text-decoration:underline;font-family:inherit}
+  /* ═══ Refonte visuelle 18/11 : thème clair/sombre, aération, équipe, édition directe, Face ID ═══ */
+  .theme-btn{width:36px;height:36px;border-radius:12px;background:var(--carte);border:1px solid var(--bord);
+             color:var(--doux);font-size:16px;display:grid;place-items:center;flex:none;font-family:inherit}
+  .equipe{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+  .agent{display:flex;align-items:center;gap:11px;background:var(--carte2);border:1px solid var(--bord);
+         border-radius:16px;padding:10px 12px}
+  .agent img,.agent .init{width:46px;height:46px;border-radius:50%;object-fit:cover;flex:none;
+         background:var(--accent-fond);border:1px solid var(--accent-bord)}
+  .agent .init{display:grid;place-items:center;font-size:19px;font-weight:900;color:var(--accent)}
+  .agent b{display:block;font-size:13.5px;line-height:1.2}
+  .agent small{color:var(--doux);font-size:11.5px}
+  .tache span.edit-ok{cursor:text}
+  textarea.tache-edit{flex:1;min-width:0;font:inherit;font-size:16px;line-height:1.4;padding:8px 10px;
+         border-radius:10px;border:1px solid var(--accent);background:var(--carte2);color:var(--texte);
+         resize:none;overflow:hidden;min-height:40px}
+  #verrou{position:fixed;inset:0;z-index:50;display:grid;place-items:center;background:var(--fond)}
+  #verrou .boite{text-align:center;padding:24px;max-width:320px}
+  #verrou .cadenas{font-size:44px;margin-bottom:14px}
+  #verrou h1{font-size:22px;font-weight:800;margin-bottom:6px}
+  #verrou p{color:var(--doux);font-size:14px;margin-bottom:22px}
+  #verrou button.principal{margin-top:0}
+  #verrou .autre{margin-top:16px;background:none;border:none;color:var(--doux);
+                 font-size:13px;text-decoration:underline;font-family:inherit}
 </style>
 </head>
 <body>
@@ -377,6 +441,7 @@
     </select>
     <div class="tete-d">
       <div class="maj" id="maj"></div>
+      <button class="theme-btn" id="btn-theme" title="Thème clair / sombre"></button>
       <button class="icone" id="btn-refresh" title="Rafraîchir">&#8635;</button>
     </div>
   </header>
@@ -495,6 +560,7 @@
 
   <footer>
     Déchiffré sur cet appareil. Rien n'est envoyé nulle part.<br>
+    <button id="btn-faceid" class="cache"></button><br>
     <button id="btn-oublier">Effacer mes accès de ce téléphone</button>
   </footer>
 </div>
@@ -1155,13 +1221,13 @@ function grapheBarres(vals, etiq, couleur, fmt) {
   const L = 340, H = 240, G = 38, n = vals.length || 1, lg = (L - G) / n, pas = Math.ceil(n / 7);
   const max = Math.max(...vals, 0), min = Math.min(...vals, 0), et = (max - min) || 1;
   const y = v => 16 + (max - v) / et * (H - 50);
-  let h = graduations(min, max).map(t => `<line x1="${G}" x2="${L}" y1="${y(t)}" y2="${y(t)}" stroke="#222"/><text x="${G - 5}" y="${y(t) + 4}" text-anchor="end" font-size="11" fill="#777">${fmt ? fmt(t) : court$(t)}</text>`).join("");
-  h += `<line x1="${G}" x2="${L}" y1="${y(0)}" y2="${y(0)}" stroke="#555"/>`;
+  let h = graduations(min, max).map(t => `<line x1="${G}" x2="${L}" y1="${y(t)}" y2="${y(t)}" stroke="var(--grille)"/><text x="${G - 5}" y="${y(t) + 4}" text-anchor="end" font-size="11" fill="var(--tres-doux)">${fmt ? fmt(t) : court$(t)}</text>`).join("");
+  h += `<line x1="${G}" x2="${L}" y1="${y(0)}" y2="${y(0)}" stroke="var(--doux)"/>`;
   vals.forEach((v, i) => {
     const x = G + i * lg + lg * .16, w = Math.max(lg * .68, 1.5), y0 = y(0), yv = y(v);
     h += `<rect x="${x}" y="${Math.min(y0, yv)}" width="${w}" height="${Math.max(Math.abs(yv - y0), 2)}" rx="${Math.min(5, w / 3)}" fill="${couleur(v)}"/>`;
-    if (n <= 10) h += `<text x="${x + w / 2}" y="${v >= 0 ? yv - 6 : yv + 15}" text-anchor="middle" font-size="12" font-weight="800" fill="#f7f7f7">${fmt ? fmt(v) : court$(v)}</text>`;
-    if ((n - 1 - i) % pas === 0) h += `<text x="${i === n - 1 && n > 1 ? x + w : x + w / 2}" y="${H - 6}" text-anchor="${i === n - 1 && n > 1 ? "end" : "middle"}" font-size="12" fill="#9b9b9b">${etiq[i]}</text>`;
+    if (n <= 10) h += `<text x="${x + w / 2}" y="${v >= 0 ? yv - 6 : yv + 15}" text-anchor="middle" font-size="12" font-weight="800" fill="var(--texte)">${fmt ? fmt(v) : court$(v)}</text>`;
+    if ((n - 1 - i) % pas === 0) h += `<text x="${i === n - 1 && n > 1 ? x + w : x + w / 2}" y="${H - 6}" text-anchor="${i === n - 1 && n > 1 ? "end" : "middle"}" font-size="12" fill="var(--doux)">${etiq[i]}</text>`;
   });
   return `<svg class="graphe" viewBox="0 0 ${L} ${H}">${h}</svg>`;
 }
@@ -1171,7 +1237,7 @@ function grapheLignes(series, etiq, seuils, fmt) {   // seuils : [{v, c, nom}]
   const max = Math.max(...tous), min = Math.min(...tous), et = (max - min) || 1;
   const x = i => n === 1 ? (G + L) / 2 : G + 8 + i * (L - G - 16) / (n - 1), y = v => 14 + (max - v) / et * (H - 48);
   const f = fmt || court$;
-  let h = graduations(min, max).map(t => `<line x1="${G}" x2="${L}" y1="${y(t)}" y2="${y(t)}" stroke="#222"/><text x="${G - 5}" y="${y(t) + 4}" text-anchor="end" font-size="11" fill="#777">${f(t)}</text>`).join("");
+  let h = graduations(min, max).map(t => `<line x1="${G}" x2="${L}" y1="${y(t)}" y2="${y(t)}" stroke="var(--grille)"/><text x="${G - 5}" y="${y(t) + 4}" text-anchor="end" font-size="11" fill="var(--tres-doux)">${f(t)}</text>`).join("");
   for (const sv of (seuils || [])) h += `<line x1="${G}" x2="${L}" y1="${y(sv.v)}" y2="${y(sv.v)}" stroke="${sv.c}" stroke-width="1.6" stroke-dasharray="5 4"/>`;
   for (const s of series) {
     const d = s.v.map((v, i) => `${i ? "L" : "M"}${x(i).toFixed(1)},${y(v).toFixed(1)}`).join("");
@@ -1179,7 +1245,7 @@ function grapheLignes(series, etiq, seuils, fmt) {   // seuils : [{v, c, nom}]
     h += `<path d="${d}" fill="none" stroke="${s.c}" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>`;
     if (n <= 31) s.v.forEach((v, i) => h += `<circle cx="${x(i)}" cy="${y(v)}" r="2.8" fill="${s.c}"/>`);
   }
-  etiq.forEach((e, i) => { if ((n - 1 - i) % pas === 0) h += `<text x="${x(i)}" y="${H - 6}" text-anchor="${i === n - 1 && n > 1 ? "end" : "middle"}" font-size="12" fill="#9b9b9b">${e}</text>`; });
+  etiq.forEach((e, i) => { if ((n - 1 - i) % pas === 0) h += `<text x="${x(i)}" y="${H - 6}" text-anchor="${i === n - 1 && n > 1 ? "end" : "middle"}" font-size="12" fill="var(--doux)">${e}</text>`; });
   return `<div class="leg">${series.map(s => `<span><i style="background:${s.c}"></i>${s.nom}</span>`).join("")}${(seuils || []).map(sv => `<span><i style="background:${sv.c}"></i>${sv.nom}</span>`).join("")}</div><svg class="graphe" viewBox="0 0 ${L} ${H}">${h}</svg>`;
 }
 function calendrierPlage() {   // choisir début puis fin en touchant les jours
@@ -1225,9 +1291,9 @@ function rendreAnalyse() {
       ${k("Marge", `<span class="${a.marge < 0 ? "m-non" : a.marge < 0.15 ? "m-moyen" : "m-ok"}">${pct(a.marge)}</span>`, "avant abonnements")}
     </div>
     <section><h2>💰 Bénéf par ${nomG}</h2>${grapheBarres(L.map(p => p.a.net), L.map(p => p.lab), couleurNet)}</section>
-    <section><h2>📊 CA et pub par ${nomG} <span>en $</span></h2>${grapheLignes([{ nom: "CA", c: "#ff7a00", v: L.map(p => p.a.ca), aire: true }, { nom: "Pub dépensée (Meta + Pinterest)", c: "#9b9b9b", v: L.map(p => p.a.spend) }], L.map(p => p.lab))}</section>
-    <section><h2>🎯 Marge par ${nomG}</h2>${grapheLignes([{ nom: "Marge", c: "#34d399", v: L.map(p => p.a.marge), aire: true }], L.map(p => p.lab),
-      [{ v: D.seuils?.marge_ok ?? 0.15, c: "#ff7a00", nom: "bonne journée 15 %" }, { v: 0, c: "#ff5a5a", nom: "rentable 0 %" }], v => Math.round(v * 100) + " %")}</section>
+    <section><h2>📊 CA et pub par ${nomG} <span>en $</span></h2>${grapheLignes([{ nom: "CA", c: "var(--accent)", v: L.map(p => p.a.ca), aire: true }, { nom: "Pub dépensée (Meta + Pinterest)", c: "var(--doux)", v: L.map(p => p.a.spend) }], L.map(p => p.lab))}</section>
+    <section><h2>🎯 Marge par ${nomG}</h2>${grapheLignes([{ nom: "Marge", c: "var(--vert)", v: L.map(p => p.a.marge), aire: true }], L.map(p => p.lab),
+      [{ v: D.seuils?.marge_ok ?? 0.15, c: "var(--accent)", nom: "bonne journée 15 %" }, { v: 0, c: "var(--rouge)", nom: "rentable 0 %" }], v => Math.round(v * 100) + " %")}</section>
     ${lances.some(x => x !== null) ? `<section><h2>🚀 Créas lancées par ${nomG}</h2>${grapheBarres(lances.map(x => x || 0), L.map(p => p.lab), () => "#ff7a00", v => String(v))}</section>` : ""}
     <section><h2>🧾 Les 8 dernières semaines</h2>${S8.slice().reverse().map((p, i) => { const j = S8.length - 1 - i; return `
       <div class="mois-c"><div class="t">Semaine du ${ddmm(p.k)}</div>
@@ -1263,11 +1329,11 @@ async function tache(q) {
 }
 function anneau(f, t) {
   const r = 36, c = 2 * Math.PI * r, p = t ? f / t : 0;
-  return `<svg viewBox="0 0 86 86"><circle cx="43" cy="43" r="${r}" fill="none" stroke="#222" stroke-width="9"/>
+  return `<svg viewBox="0 0 86 86"><circle cx="43" cy="43" r="${r}" fill="none" stroke="var(--grille)" stroke-width="9"/>
     <circle cx="43" cy="43" r="${r}" fill="none" stroke="url(#gr)" stroke-width="9" stroke-linecap="round"
       stroke-dasharray="${(p * c).toFixed(1)} ${c.toFixed(1)}" transform="rotate(-90 43 43)"/>
     <defs><linearGradient id="gr" x1="0" x2="1"><stop offset="0" stop-color="#ff4d00"/><stop offset="1" stop-color="#ffb15c"/></linearGradient></defs>
-    <text x="43" y="49" text-anchor="middle" font-size="19" font-weight="900" fill="#f7f7f7">${Math.round(p * 100)}%</text></svg>`;
+    <text x="43" y="49" text-anchor="middle" font-size="19" font-weight="900" fill="var(--texte)">${Math.round(p * 100)}%</text></svg>`;
 }
 function rendreTodo() {
   const w = $("#todo-wrap"); if (!w) return;
@@ -1282,7 +1348,7 @@ function rendreTodo() {
   for (let i = finis.length - 1; i >= 0; i--) { if (agreger([finis[i]]).profit >= 0) serie++; else break; }
   const ligne = x => `<div class="tache ${x.fait ? "faite" : ""}">${x.qui === "moi" || x.qui === "claude"
       ? `<input type="checkbox" data-id="${x.id}" ${x.fait ? "checked" : ""}>` : `<span class="puce">${TYPES[x.qui][0]}</span>`}
-      <span>${liens(x.texte)}${x.qui === "moi" && x.jour < aujL && !x.fait ? ` <small style="color:var(--rouge)">· en retard</small>` : ""}</span>
+      <span class="edit-ok" data-edit="${x.id}">${liens(x.texte)}${x.qui === "moi" && x.jour < aujL && !x.fait ? ` <small style="color:var(--rouge)">· en retard</small>` : ""}</span>
       <button data-suppr="${x.id}" title="Supprimer">×</button></div>`;
   const carte = (titre, l, vide) => `<div class="carte-t"><div class="ent"><b>${titre}</b><span>${l.length}</span></div>
       ${l.map(ligne).join("") || `<div class="vide-msg">${vide}</div>`}</div>`;
@@ -1314,9 +1380,48 @@ function rendreTodo() {
   const tg = $("#td-faites"); if (tg) tg.onclick = () => { TD.faites = !TD.faites; rendreTodo(); };
   w.querySelectorAll("input[data-id]").forEach(c => c.onchange = () => tache({ action: "coche", id: c.dataset.id, fait: c.checked }));
   w.querySelectorAll("button[data-suppr]").forEach(b => b.onclick = () => { if (confirm("Supprimer ?")) tache({ action: "suppr", id: b.dataset.suppr }); });
+  // Édition DIRECTE (18/11) : on touche le texte, on écrit — pas de pop-up.
+  w.querySelectorAll(".tache span[data-edit]").forEach(sp => sp.onclick = ev => {
+    if (ev.target.tagName === "A") return;   // un lien reste un lien
+    const t = (D.taches || []).find(x => String(x.id) === sp.dataset.edit);
+    if (!t) return;
+    const z = document.createElement("textarea");
+    z.className = "tache-edit"; z.maxLength = 300; z.rows = 1; z.value = t.texte;
+    sp.replaceWith(z);
+    const ajuste = () => { z.style.height = "auto"; z.style.height = z.scrollHeight + "px"; };
+    z.oninput = ajuste;
+    requestAnimationFrame(() => { ajuste(); z.focus(); z.setSelectionRange(z.value.length, z.value.length); });
+    let fini = false;
+    const valide = () => { if (fini) return; fini = true;
+      const v = z.value.trim();
+      if (v && v !== t.texte) tache({ action: "modif", id: t.id, texte: v });
+      else rendreTodo(); };
+    z.onblur = valide;
+    z.onkeydown = e => {
+      if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); z.blur(); }
+      if (e.key === "Escape") { fini = true; rendreTodo(); }
+    };
+  });
 }
 
 /* ═════════ Objectif : 100 KD, et ce qui va sortir ═════════ */
+// L'équipe (18/11) : les 8 agents, mini personnages 3D générés sur Higgsfield.
+const AGENTS = [
+  { n: "Créa Strat",   r: "Stratège",     f: "crea-strat" },
+  { n: "Création Ads", r: "Monteur",      f: "creation-ads" },
+  { n: "Analyse Ads",  r: "Analyste",     f: "analyse-ads" },
+  { n: "Compta",       r: "Comptable",    f: "compta" },
+  { n: "Page Produit", r: "Bâtisseur",    f: "page-produit" },
+  { n: "Veille",       r: "Veilleur",     f: "veille" },
+  { n: "Web",          r: "Constructeur", f: "web" },
+  { n: "Vérification", r: "Inspecteur",   f: "verification" },
+];
+const equipeHtml = () => `<section><h2>👥 L'équipe <span>${AGENTS.length} agents</span></h2>
+  <div class="equipe">${AGENTS.map(a => `
+    <div class="agent"><img src="img/equipe/${a.f}.jpg" alt=""
+        onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'init',textContent:'${a.n[0]}'}))">
+      <div><b>${a.n}</b><small>${a.r}</small></div></div>`).join("")}</div></section>`;
+
 function rendrePlan() {
   const w = $("#plan-wrap"); if (!w) return;
   const finis = joursFinis(), d7 = finis.slice(-7), a7 = agreger(d7);
@@ -1364,7 +1469,7 @@ function rendrePlan() {
     </section>`;
   w.innerHTML = `
     <div class="titre-page">Objectif 🚀<small>CA par jour · moyenne des 7 derniers jours</small></div>
-    <div class="carte-t" style="background:linear-gradient(160deg,#2a1000,#0b0b0b 70%);border-color:#3a1d00">
+    <div class="carte-t" style="background:var(--accent-fond);border-color:var(--accent-bord)">
       <div class="obj-cible"><div class="l">le but</div><div class="c">100 KD</div><div class="l" style="margin-top:6px">100 000 $ de CA par jour</div></div>
       <div class="barre" style="height:16px;margin-top:16px"><div style="width:${(prog * 100).toFixed(1)}%"></div></div>
       <div class="obj-lib" style="margin:8px 0 0">tu es à <b style="color:var(--texte);font-size:18px">${eur(caJour)}</b> / jour · prochain palier <b style="color:var(--accent)">${prochain} KD</b> : encore ${eur(Math.max(0, haut - caJour))} / jour</div>
@@ -1381,7 +1486,8 @@ function rendrePlan() {
       <div class="prev-j"><div class="q">Total</div><div class="l">sans le THB</div><div class="m">${eur(total)}</div></div>
       <div class="note">Judy = ce que tu lui paies le vendredi, estimé sur ton coût produits des 7 derniers jours. Frais virement Judy = 25 $ prélevés par Slash à chaque paiement.</div>
     </section>
-    ${thbHtml}`;
+    ${thbHtml}
+    ${equipeHtml()}`;
 }
 
 function rendreRemb(dates) {
@@ -1470,6 +1576,82 @@ function flash(texte, mauvais) {
   setTimeout(() => el.remove(), 2600);
 }
 
+/* ── Thème clair / sombre (18/11) : clair par défaut, interrupteur en haut, choix retenu ── */
+const META_THEME = { clair: "#F2EFE9", sombre: "#000000" };
+function appliquerTheme(t) {
+  if (t === "sombre") document.documentElement.dataset.theme = "sombre";
+  else document.documentElement.removeAttribute("data-theme");
+  localStorage.setItem("theme", t);
+  document.querySelector('meta[name="theme-color"]').setAttribute("content", META_THEME[t]);
+  const b = $("#btn-theme"); if (b) b.textContent = t === "sombre" ? "☀️" : "🌙";
+}
+appliquerTheme(localStorage.getItem("theme") || "clair");
+$("#btn-theme").onclick = () => {
+  appliquerTheme((localStorage.getItem("theme") || "clair") === "clair" ? "sombre" : "clair");
+};
+
+/* ── Verrou Face ID (WebAuthn, passkey du téléphone) ──
+   Verrou d'écran : Face ID doit réussir avant que l'app n'utilise les accès
+   enregistrés. La clé vit dans le trousseau du téléphone, rien dans le code.
+   Le secours « Entrer avec mes clés » efface les accès : il faut re-taper
+   jeton + mot de passe (sinon le verrou ne protégerait rien). */
+const B64V = {
+  enc: b => btoa(String.fromCharCode(...new Uint8Array(b))),
+  dec: s => Uint8Array.from(atob(s), c => c.charCodeAt(0)),
+};
+function majBoutonFaceid() {
+  const b = $("#btn-faceid");
+  if (!window.PublicKeyCredential) { b.classList.add("cache"); return; }
+  b.classList.remove("cache");
+  b.textContent = localStorage.getItem("fid")
+    ? "Désactiver le verrou Face ID" : "Verrouiller l'app avec Face ID";
+}
+$("#btn-faceid").onclick = async () => {
+  if (localStorage.getItem("fid")) {
+    localStorage.removeItem("fid"); majBoutonFaceid(); flash("Verrou Face ID désactivé"); return;
+  }
+  try {
+    const cred = await navigator.credentials.create({ publicKey: {
+      challenge: crypto.getRandomValues(new Uint8Array(32)),
+      rp: { name: "Suivi" },
+      user: { id: crypto.getRandomValues(new Uint8Array(16)), name: "suivi", displayName: "Suivi" },
+      pubKeyCredParams: [{ type: "public-key", alg: -7 }, { type: "public-key", alg: -257 }],
+      authenticatorSelection: { authenticatorAttachment: "platform", userVerification: "required" },
+      timeout: 60000,
+    } });
+    localStorage.setItem("fid", B64V.enc(cred.rawId));
+    majBoutonFaceid(); flash("Verrou Face ID activé 🔒");
+  } catch (e) { flash("Face ID pas activé : " + (e.name || e), true); }
+};
+majBoutonFaceid();
+
+function montrerVerrou(apres) {
+  const el = document.createElement("div");
+  el.id = "verrou";
+  el.innerHTML = `<div class="boite"><div class="cadenas">🔒</div><h1>Suivi</h1>
+    <p>Déverrouille avec Face ID pour ouvrir tes chiffres.</p>
+    <button class="principal" id="verrou-btn">Déverrouiller</button>
+    <button class="autre" id="verrou-cles">Entrer avec mes clés</button></div>`;
+  document.body.appendChild(el);
+  const tenter = async (silencieux) => {
+    try {
+      await navigator.credentials.get({ publicKey: {
+        challenge: crypto.getRandomValues(new Uint8Array(32)),
+        allowCredentials: [{ type: "public-key", id: B64V.dec(localStorage.getItem("fid")) }],
+        userVerification: "required", timeout: 60000,
+      } });
+      el.remove(); apres();
+    } catch (e) { if (!silencieux) flash("Face ID refusé", true); }
+  };
+  $("#verrou-btn").onclick = () => tenter(false);
+  $("#verrou-cles").onclick = () => {
+    el.remove();
+    localStorage.removeItem("j"); localStorage.removeItem("m"); localStorage.removeItem("fid");
+    $("#connexion").classList.remove("cache");
+  };
+  tenter(true);   // essai direct à l'ouverture ; s'il faut un geste, le bouton est là
+}
+
 $("#btn-entrer").onclick = () => {
   const j = $("#jeton").value.trim(), m = $("#mdp").value;
   if (j && m) entrer(j, m, false);
@@ -1504,9 +1686,14 @@ $("#btn-oublier").onclick = () => {
     // On ne remplit PAS les champs visibles ; juste un "Déchiffrement…" discret
     // le temps que ton mot de passe déverrouille les données, puis le tableau.
     $("#connexion").classList.add("cache");
-    document.body.insertAdjacentHTML("beforeend",
-      '<div id="splash" style="position:fixed;inset:0;display:grid;place-items:center;color:#8a8f98;font:14px system-ui,-apple-system,sans-serif">Déchiffrement…</div>');
-    entrer(j, m, true).finally(() => { const s = document.getElementById("splash"); if (s) s.remove(); });
+    const go = () => {
+      document.body.insertAdjacentHTML("beforeend",
+        '<div id="splash" style="position:fixed;inset:0;display:grid;place-items:center;color:var(--doux);font:14px system-ui,-apple-system,sans-serif">Déchiffrement…</div>');
+      entrer(j, m, true).finally(() => { const s = document.getElementById("splash"); if (s) s.remove(); });
+    };
+    // Verrou Face ID activé → il doit réussir avant d'ouvrir les chiffres.
+    if (localStorage.getItem("fid") && window.PublicKeyCredential) montrerVerrou(go);
+    else go();
   }
 })();
 
