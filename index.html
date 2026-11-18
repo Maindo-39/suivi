@@ -1436,7 +1436,8 @@ function ouvrirEdition(t) {
 }
 
 /* ═════════ Objectif : 100 KD, et ce qui va sortir ═════════ */
-// L'équipe (18/11) : les 8 agents, mini personnages 3D générés sur Higgsfield.
+// L'équipe (18/11) : le Manager d'abord, puis les 8 agents — mini personnages 3D Higgsfield.
+const MANAGER = { n: "Manager", r: "Chiffres, arbitrages — il lance les agents", f: "manager" };
 const AGENTS = [
   { n: "Créa Strat",   r: "Stratège",     f: "crea-strat" },
   { n: "Création Ads", r: "Monteur",      f: "creation-ads" },
@@ -1447,9 +1448,9 @@ const AGENTS = [
   { n: "Web",          r: "Constructeur", f: "web" },
   { n: "Vérification", r: "Inspecteur",   f: "verification" },
 ];
-const equipeHtml = () => `<section><h2>👥 L'équipe <span>${AGENTS.length} agents</span></h2>
-  <div class="equipe">${AGENTS.map(a => `
-    <div class="agent"><img src="img/equipe/${a.f}.jpg" alt=""
+const equipeHtml = () => `<section><h2>👥 L'équipe <span>le manager + ${AGENTS.length} agents</span></h2>
+  <div class="equipe">${[MANAGER, ...AGENTS].map(a => `
+    <div class="agent"${a === MANAGER ? ' style="grid-column:1/-1;background:var(--accent-fond);border-color:var(--accent-bord)"' : ""}><img src="img/equipe/${a.f}.jpg" alt=""
         onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'init',textContent:'${a.n[0]}'}))">
       <div><b>${a.n}</b><small>${a.r}</small></div></div>`).join("")}</div></section>`;
 
