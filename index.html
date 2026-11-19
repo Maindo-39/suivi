@@ -604,7 +604,7 @@
 // ⚠️ Version affichée en pied de page. Bumper ICI et dans sw.js (const CACHE)
 // dans le MÊME commit. L'app vérifie auprès du service worker : s'il tourne
 // avec un autre cache, l'écart s'affiche à côté (ex. « v41 · sw v40 »).
-const VERSION = "v47";
+const VERSION = "v48";
 const DEPOT = "Maindo-39/mdjmotion";
 const CHEMIN = "data/data.enc";
 const ITER = 600000;
@@ -700,9 +700,9 @@ const ABOS = [   // à partir du 18/11/2026 — dernier montant lu sur Slash
   { nom: "Triple Whale", jour: 29, montant: 220.15 },
 ];
 const ABOS_HEBDO = [ { nom: "Frais virement Judy", jsem: 5, montant: 25 } ]; // 5 = vendredi (getUTCDay)
-// VA : toutes les deux semaines en novembre (dernier paiement 126 $ le 05/11), une fois par mois
+// VA : 7 $/jour (1 h, 7 j/7). 19/11 = 98 $ (6→19/11), 30/11 = 77 $ (20→30/11) ; puis une fois par mois
 // en fin de mois à partir de décembre. Remplacé par le montant réel dès qu'il est payé.
-const VA_PREVU = { "2026-11-19": 126 };
+const VA_PREVU = { "2026-11-19": 98, "2026-11-30": 77 };
 // Plan du 16/11 (Miradj) : prélèvements décalés. Date prévue → nouvelle date.
 const DECALES = { "2026-11-18|Higgsfield": "2026-12-15", "2026-11-29|Triple Whale": "2026-12-14", "2026-12-02|TrendTrack": "2026-12-15" };
 function abosDuJour(iso) {
