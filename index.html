@@ -16,7 +16,7 @@
 <meta name="apple-mobile-web-app-title" content="Suivi">
 <meta name="robots" content="noindex,nofollow">
 <link rel="manifest" href="manifest.json">
-<link rel="apple-touch-icon" href="icone.png">
+<link rel="apple-touch-icon" href="icone-180.png?v=43">
 <title>Suivi</title>
 <style>
   /* ═══ Deux thèmes (18/11) : CLAIR par défaut (blanc/beige cassé + orange), sombre = noir + orange ═══ */
@@ -405,6 +405,29 @@
          font-family:inherit;border:1px solid var(--bord)}
   .edit-actions .annuler{background:var(--carte);color:var(--doux)}
   .edit-actions .sauver{background:var(--accent);color:var(--sur-accent);border-color:transparent}
+  /* ═══ v43 : onglet « Tableau de bord » (atterrissage) — calendrier tâches + 📌 rappels ═══ */
+  .tb-cal{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+  .tb-cal .jsem{font-size:10px;color:var(--tres-doux);text-align:center;padding-bottom:4px;font-weight:700}
+  .tb-case{min-width:0;min-height:62px;border-radius:11px;border:1px solid var(--bord);background:var(--carte2);
+    padding:4px 4px;display:flex;flex-direction:column;gap:2px;align-items:stretch;text-align:left;
+    font-family:inherit;color:var(--texte);overflow:hidden}
+  .tb-case .pille{max-width:100%}
+  .tb-case.hors{opacity:.4}
+  .tb-case.auj{border-color:var(--accent)}
+  .tb-case.auj .num{background:var(--accent);color:var(--sur-accent)}
+  .tb-case.sel{background:var(--accent-fond);border-color:var(--accent)}
+  .tb-case .num{font-size:11px;font-weight:800;width:19px;height:19px;border-radius:7px;
+    display:grid;place-items:center;flex:none}
+  .tb-case .pille{font-size:8.5px;line-height:1.25;padding:1px 4px;border-radius:5px;
+    background:var(--carte);border:1px solid var(--bord);color:var(--doux);
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .tb-case .pille.fait{text-decoration:line-through;color:var(--tres-doux)}
+  .tb-case .pille.rappel{border-color:var(--accent-bord);color:var(--accent);background:var(--accent-fond)}
+  .tb-case .plus{font-size:8.5px;color:var(--accent);font-weight:700}
+  .tb-bascule{display:flex;gap:6px;margin:10px 0 8px}
+  .tb-bascule button{padding:7px 13px;border-radius:999px;border:1px solid var(--bord);
+    background:var(--carte);color:var(--doux);font-size:13px;font-weight:700;font-family:inherit}
+  .tb-bascule button.actif{border-color:var(--accent);color:var(--accent);background:var(--accent-fond)}
   #verrou{position:fixed;inset:0;z-index:50;display:grid;place-items:center;background:var(--fond)}
   #verrou .boite{text-align:center;padding:24px;max-width:320px}
   #verrou .cadenas{font-size:44px;margin-bottom:14px}
@@ -478,6 +501,7 @@
   <div class="pages" id="pages">
     <div class="page" id="page-ads"></div>
     <div class="page" id="page-compta"></div>
+    <div class="page" id="page-tb"><div id="tb-wrap"></div></div>
     <div class="page" id="page-todo"><div id="todo-wrap"></div></div>
     <div class="page" id="page-plan"><div id="plan-wrap"></div></div>
     <div class="page" id="page-analyse"><div id="an-wrap"></div></div>
@@ -486,9 +510,10 @@
   <nav class="nav" id="nav"><div class="nav-in">
     <button data-p="0"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.2" fill="currentColor"/></svg>Ads</button>
     <button data-p="1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 6.5c0-1.9-2.2-3-5-3s-5 1.2-5 3.4c0 4.8 10 2.6 10 7.4 0 2.2-2.2 3.4-5 3.4s-5-1.1-5-3"/></svg>Compta</button>
-    <button data-p="2"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="3.5" width="17" height="17" rx="5"/><path d="m8 12 3 3 5-6"/></svg>To-do</button>
-    <button data-p="3"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c3 2.5 4.5 5.5 4.5 9.5L12 21l-4.5-8.5C7.5 8.5 9 5.5 12 3z"/><circle cx="12" cy="10" r="1.6"/></svg>Objectif</button>
-    <button data-p="4"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20h18"/><path d="M6 16v-5M11 16V7M16 16v-8M20 16V4"/></svg>Analyse</button>
+    <button data-p="2"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4.5" width="17" height="16" rx="4"/><path d="M8 3v3M16 3v3M3.5 9.5h17"/><path d="M8 13.5h3M8 17h5"/></svg>Tableau</button>
+    <button data-p="3"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="3.5" width="17" height="17" rx="5"/><path d="m8 12 3 3 5-6"/></svg>To-do</button>
+    <button data-p="4"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c3 2.5 4.5 5.5 4.5 9.5L12 21l-4.5-8.5C7.5 8.5 9 5.5 12 3z"/><circle cx="12" cy="10" r="1.6"/></svg>Objectif</button>
+    <button data-p="5"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20h18"/><path d="M6 16v-5M11 16V7M16 16v-8M20 16V4"/></svg>Analyse</button>
   </div></nav>
   <div id="alerte-remb"></div>
 
@@ -591,7 +616,7 @@
 // ⚠️ Version affichée en pied de page. Bumper ICI et dans sw.js (const CACHE)
 // dans le MÊME commit. L'app vérifie auprès du service worker : s'il tourne
 // avec un autre cache, l'écart s'affiche à côté (ex. « v41 · sw v40 »).
-const VERSION = "v42";
+const VERSION = "v43";
 const DEPOT = "Maindo-39/mdjmotion";
 const CHEMIN = "data/data.enc";
 const ITER = 600000;
@@ -812,6 +837,7 @@ function rendre() {
   rendreSemaine();
   rendreAnalyse();
   rendreTodo();
+  rendreTB();
   rendrePlan();
 }
 
@@ -1340,7 +1366,7 @@ const PHRASES = ["Nouvelle année. Même faim. Plus fort.", "Les gagnants ne son
   "Personne ne viendra le faire à ta place.", "Le confort ne scale pas.", "Pense 100 KD. Agis aujourd'hui.",
   "Les mauvais jours forgent les grands mois.", "100 KD. Pas un rêve : une destination.",
   "Finis l'année comme tu veux commencer la suivante."];
-const TYPES = { moi: ["✅", "Tâche"], idee: ["💡", "Idée"], note: ["📝", "Note"], lien: ["🔗", "Lien"] };
+const TYPES = { moi: ["✅", "Tâche"], rappel: ["📌", "Rappel"], idee: ["💡", "Idée"], note: ["📝", "Note"], lien: ["🔗", "Lien"] };
 let TD = { type: "moi", jour: "", faites: false };
 const ROBOT = "https://collecteur.relais-brume-90312.workers.dev/";
 async function tache(q) {
@@ -1370,15 +1396,17 @@ function rendreTodo() {
   const semFaites = T.filter(x => x.qui === "moi" && x.fait && x.jour >= lun).length;
   const finis = joursFinis(); let serie = 0;
   for (let i = finis.length - 1; i >= 0; i--) { if (agreger([finis[i]]).profit >= 0) serie++; else break; }
-  const ligne = x => `<div class="tache ${x.fait ? "faite" : ""}">${x.qui === "moi" || x.qui === "claude"
-      ? `<input type="checkbox" data-id="${x.id}" ${x.fait ? "checked" : ""}>` : `<span class="puce">${TYPES[x.qui][0]}</span>`}
+  // v43 : les conseils de Claude ne se cochent plus — ils se SUPPRIMENT quand c'est fait.
+  const ligne = x => `<div class="tache ${x.fait ? "faite" : ""}">${x.qui === "moi"
+      ? `<input type="checkbox" data-id="${x.id}" ${x.fait ? "checked" : ""}>` : `<span class="puce">${x.qui === "claude" ? "🧠" : TYPES[x.qui][0]}</span>`}
       <span class="edit-ok" data-edit="${x.id}" onclick="editerDepuis(this, event)">${liens(x.texte)}${x.qui === "moi" && x.jour < aujL && !x.fait ? ` <small style="color:var(--rouge)">· en retard</small>` : ""}</span>
       ${/https?:\/\//.test(x.texte) ? `<button class="crayon" data-edit="${x.id}" onclick="editerDepuis(this, event)" title="Modifier">✎</button>` : ""}
-      <button data-suppr="${x.id}" title="Supprimer">×</button></div>`;
+      <button data-suppr="${x.id}" title="${x.qui === "claude" ? "C'est fait — supprimer le conseil" : "Supprimer"}">×</button></div>`;
   const carte = (titre, l, vide) => `<div class="carte-t"><div class="ent"><b>${titre}</b><span>${l.length}</span></div>
       ${l.map(ligne).join("") || `<div class="vide-msg">${vide}</div>`}</div>`;
   const aFaire = duJour.filter(x => !x.fait), faites = duJour.filter(x => x.fait);
-  const claude = T.filter(x => x.qui === "claude" && (!x.fait || x.jour >= plusJours(aujL, -7)));
+  // v43 : un conseil coché jadis reste caché ; un conseil se supprime quand c'est fait
+  const claude = T.filter(x => x.qui === "claude" && !x.fait);
   const nomJ = TD.jour === aujL ? "aujourd'hui" : JOURS3[new Date(TD.jour + "T12:00:00Z").getUTCDay()] + " " + ddmm(TD.jour);
   w.innerHTML = `
     <div class="motiv"><img src="img/motiv-${String(mi + 1).padStart(2, "0")}.jpg?v=8" alt="" onload="this.parentNode.classList.add('img-ok')" onerror="this.remove()">
@@ -1389,7 +1417,7 @@ function rendreTodo() {
         <span class="js">${JOURS3[d.getUTCDay()].slice(0, 3)}</span><span class="n">${d.getUTCDate()}</span><span class="pt ${reste ? "t" : ""}"></span></button>`; }).join("")}</div>
     <div class="carte-t"><div class="anneau">${anneau(faitesJ, duJour.length)}
       <div><div class="t1">${faitesJ} / ${duJour.length} faites</div><div class="t2">${nomJ} · 🔥 ${serie} jour${serie > 1 ? "s" : ""} rentable${serie > 1 ? "s" : ""} d'affilée · ✅ ${semFaites} cette semaine</div></div></div></div>
-    <div class="carte-t"><div class="seg">${Object.entries(TYPES).map(([k, [e, l]]) => `<button data-t="${k}" class="${TD.type === k ? "actif" : ""}">${e} ${l}</button>`).join("")}</div>
+    <div class="carte-t"><div class="seg">${Object.entries(TYPES).filter(([k]) => k !== "rappel").map(([k, [e, l]]) => `<button data-t="${k}" class="${TD.type === k ? "actif" : ""}">${e} ${l}</button>`).join("")}</div>
       <div class="ajout" style="margin-top:4px"><textarea id="todo-txt" class="todo-txt" rows="1" maxlength="300" placeholder="${{ moi: "Nouvelle tâche…", idee: "Une idée…", note: "Une note…", lien: "Colle un lien…" }[TD.type]}"></textarea><button id="todo-add" style="height:48px">Ajouter</button></div></div>
     ${carte("✅ À faire · " + nomJ, aFaire, "Rien. Ajoute ta première tâche 👆")}
     ${faites.length ? `<button class="faites-tog" id="td-faites">${TD.faites ? "▾" : "▸"} ${faites.length} faite${faites.length > 1 ? "s" : ""}</button>${TD.faites ? carte("Faites", faites, "") : ""}` : ""}
@@ -1408,6 +1436,89 @@ function rendreTodo() {
   // Édition dans un PETIT PANNEAU (préférence Miradj 18/11, remplace l'inline) :
   // on touche une ligne — tâche, idée, note ou lien — et tout le texte s'ouvre
   // dans une zone confortable, avec Sauvegarder / Annuler.
+}
+
+/* ═════════ v43 : « Tableau de bord » — l'onglet d'atterrissage ═════════
+   Un calendrier mensuel (semaine qui commence le lundi) avec les TÂCHES et les
+   📌 RAPPELS datés dans les cases ; un jour se touche → sa liste dessous, et on
+   peut ajouter les deux. Aucun chiffre d'argent ici. */
+let TBS = { an: null, mois: null, jour: null, type: "moi" };
+function rendreTB() {
+  const w = $("#tb-wrap"); if (!w) return;
+  const aujL = new Date().toLocaleDateString("en-CA");
+  if (!TBS.jour) TBS.jour = aujL;
+  if (TBS.an === null) { TBS.an = +aujL.slice(0, 4); TBS.mois = +aujL.slice(5, 7) - 1; }
+  const T = D.taches || [];
+  const parJour = {};
+  for (const x of T) if ((x.qui === "moi" || x.qui === "rappel") && x.jour) (parJour[x.jour] = parJour[x.jour] || []).push(x);
+  const prem = `${TBS.an}-${String(TBS.mois + 1).padStart(2, "0")}-01`;
+  const debut = lundiDe(prem);
+  let cases = JSEM.map(j => `<div class="jsem">${j}</div>`).join("");
+  for (let i = 0; i < 42; i++) {
+    const iso = plusJours(debut, i);
+    const dans = iso.slice(0, 7) === prem.slice(0, 7);
+    const lt = (parJour[iso] || []).slice().sort((x, y) => (y.qui === "rappel") - (x.qui === "rappel"));
+    const montre = lt.slice(0, 2);
+    cases += `<button class="tb-case ${dans ? "" : "hors"} ${iso === aujL ? "auj" : ""} ${iso === TBS.jour ? "sel" : ""}" data-tbj="${iso}">
+      <span class="num">${+iso.slice(8, 10)}</span>
+      ${montre.map(x => `<span class="pille ${x.fait ? "fait" : ""} ${x.qui === "rappel" ? "rappel" : ""}">${x.qui === "rappel" ? "📌" : ""}${echap(x.texte)}</span>`).join("")}
+      ${lt.length > 2 ? `<span class="plus">+${lt.length - 2}</span>` : ""}
+    </button>`;
+  }
+  const duJour = T.filter(x => (x.qui === "moi" || x.qui === "rappel")
+    && (x.jour === TBS.jour || (TBS.jour === aujL && x.qui === "moi" && x.jour < aujL && !x.fait)));
+  const nomJ = TBS.jour === aujL ? "aujourd'hui"
+    : JOURS3[new Date(TBS.jour + "T12:00:00Z").getUTCDay()] + " " + ddmm(TBS.jour);
+  const ligneJ = x => `<div class="tache ${x.fait ? "faite" : ""}">
+      ${x.qui === "rappel" ? `<span class="puce">📌</span>` : `<input type="checkbox" data-tbid="${x.id}" ${x.fait ? "checked" : ""}>`}
+      <span class="edit-ok" data-edit="${x.id}" onclick="editerDepuis(this, event)">${liens(x.texte)}${x.qui === "moi" && x.jour < aujL && !x.fait ? ` <small style="color:var(--rouge)">· en retard</small>` : ""}</span>
+      <button data-tbsuppr="${x.id}" title="Supprimer">×</button></div>`;
+  w.innerHTML = `
+    <div class="titre-page">Tableau de bord 🗓<small>tes tâches et tes 📌 rappels, posés sur le mois</small></div>
+    <section style="padding:14px">
+      <div class="cal-tete">
+        <button data-tbm="-1">&#8249;</button>
+        <div class="mois">${MOIS[TBS.mois]} ${TBS.an}</div>
+        <button data-tbm="1">&#8250;</button>
+      </div>
+      <div class="tb-cal">${cases}</div>
+    </section>
+    <div class="carte-t"><div class="ent"><b>${maj1(nomJ)}</b>
+        <span>${duJour.filter(x => !x.fait && x.qui === "moi").length} à faire · ${duJour.filter(x => x.qui === "rappel").length} rappel${duJour.filter(x => x.qui === "rappel").length > 1 ? "s" : ""}</span></div>
+      ${duJour.map(ligneJ).join("") || `<div class="vide-msg">Rien pour ${nomJ}. Ajoute une tâche ou un rappel 👇</div>`}
+      <div class="tb-bascule">
+        <button data-tbt="moi" class="${TBS.type === "moi" ? "actif" : ""}">✅ Tâche</button>
+        <button data-tbt="rappel" class="${TBS.type === "rappel" ? "actif" : ""}">📌 Rappel</button>
+      </div>
+      <div class="ajout"><input id="tb-txt" maxlength="300" style="flex:1;min-width:0;font-size:16px;padding:12px;border-radius:12px;border:1px solid var(--bord);background:var(--carte2);color:var(--texte)"
+        placeholder="${TBS.type === "rappel" ? "Ex. paiement Judy, appel à 15 h…" : "Nouvelle tâche pour " + nomJ + "…"}">
+        <button id="tb-add">Ajouter</button></div>
+    </div>`;
+  w.querySelectorAll("[data-tbm]").forEach(b => b.onclick = () => {
+    TBS.mois += +b.dataset.tbm;
+    if (TBS.mois < 0) { TBS.mois = 11; TBS.an--; }
+    if (TBS.mois > 11) { TBS.mois = 0; TBS.an++; }
+    rendreTB();
+  });
+  w.querySelectorAll(".tb-case[data-tbj]").forEach(b => b.onclick = () => { TBS.jour = b.dataset.tbj; rendreTB(); });
+  w.querySelectorAll("[data-tbt]").forEach(b => b.onclick = () => { TBS.type = b.dataset.tbt; rendreTB(); });
+  const ajoutTb = () => {
+    const v = $("#tb-txt").value.trim();
+    if (!v) return;
+    const voulaitRappel = TBS.type === "rappel";
+    Promise.resolve(tache({ action: "ajout", qui: TBS.type, texte: v, jour: TBS.jour })).then(() => {
+      if (voulaitRappel && !(D.taches || []).some(x => x.qui === "rappel"))
+        flash("Le robot n'accepte pas encore les rappels (redéploiement à faire) — ajouté en tâche.", true);
+      rendreTB();
+    });
+  };
+  $("#tb-add").onclick = ajoutTb;
+  $("#tb-txt").onkeydown = e => { if (e.key === "Enter") ajoutTb(); };
+  w.querySelectorAll("input[data-tbid]").forEach(c => c.onchange = () =>
+    Promise.resolve(tache({ action: "coche", id: c.dataset.tbid, fait: c.checked })).then(() => rendreTB()));
+  w.querySelectorAll("button[data-tbsuppr]").forEach(b => b.onclick = () => {
+    if (confirm("Supprimer ?")) Promise.resolve(tache({ action: "suppr", id: b.dataset.tbsuppr })).then(() => rendreTB());
+  });
 }
 
 /* ── Déclenchement de l'édition — pensé pour l'iPhone ──
@@ -1604,7 +1715,7 @@ async function entrer(jeton, mdp, silencieux) {
     if (OUVERTURE) { PERIODE = 1; SEL_ADS = null; SEL_ADS_B = null; }   // Compta et Ads s'ouvrent sur aujourd'hui
     SEL_A = null; SEL_B = null; CAL_AN = null; CAL_MOIS = null;
     construirePeriodes(); rendreMaj(); rendre();
-    if (OUVERTURE && window.ouvrirTodo) { OUVERTURE = false; ouvrirTodo(); }   // l'app s'ouvre sur la To-do
+    if (OUVERTURE && window.ouvrirTodo) { OUVERTURE = false; ouvrirTodo(); }   // v43 : l'app s'ouvre sur le Tableau de bord (page 2)
   } catch (e) {
     const msg = /operation-specific|OperationError|decrypt/i.test(String(e))
       ? "Mot de passe incorrect." : (e.message || "Échec.");
@@ -1761,7 +1872,7 @@ $("#btn-oublier").onclick = () => {
   }
 })();
 
-// Retour dans l'app après plus de 10 min : on rouvre sur la To-do, et Compta/Ads sur aujourd'hui.
+// Retour dans l'app après plus de 10 min : on rouvre sur le Tableau de bord, et Compta/Ads sur aujourd'hui.
 let CACHEE_DEPUIS = 0;
 document.addEventListener("visibilitychange", () => {
   if (document.visibilityState === "hidden") { CACHEE_DEPUIS = Date.now(); return; }
