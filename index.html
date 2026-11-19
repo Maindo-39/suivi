@@ -384,7 +384,9 @@
   .agent .init{display:grid;place-items:center;font-size:19px;font-weight:900;color:var(--accent)}
   .agent b{display:block;font-size:13.5px;line-height:1.2}
   .agent small{color:var(--doux);font-size:11.5px}
-  .tache span.edit-ok{cursor:text}
+  /* iOS n'envoie un « click » qu'aux éléments qu'il juge cliquables : cursor:pointer
+     le déclare (cursor:text disait « sélection de texte » et avalait le tap). */
+  .tache span.edit-ok{cursor:pointer}
   /* Édition dans un petit panneau (préférence Miradj 18/11) : tout le texte visible, au centre */
   #edit-fond{position:fixed;inset:0;z-index:40;display:grid;place-items:center;
          padding:20px 18px calc(20px + env(safe-area-inset-bottom));
@@ -589,7 +591,7 @@
 // ⚠️ Version affichée en pied de page. Bumper ICI et dans sw.js (const CACHE)
 // dans le MÊME commit. L'app vérifie auprès du service worker : s'il tourne
 // avec un autre cache, l'écart s'affiche à côté (ex. « v41 · sw v40 »).
-const VERSION = "v41";
+const VERSION = "v42";
 const DEPOT = "Maindo-39/mdjmotion";
 const CHEMIN = "data/data.enc";
 const ITER = 600000;
@@ -1370,8 +1372,8 @@ function rendreTodo() {
   for (let i = finis.length - 1; i >= 0; i--) { if (agreger([finis[i]]).profit >= 0) serie++; else break; }
   const ligne = x => `<div class="tache ${x.fait ? "faite" : ""}">${x.qui === "moi" || x.qui === "claude"
       ? `<input type="checkbox" data-id="${x.id}" ${x.fait ? "checked" : ""}>` : `<span class="puce">${TYPES[x.qui][0]}</span>`}
-      <span class="edit-ok" data-edit="${x.id}">${liens(x.texte)}${x.qui === "moi" && x.jour < aujL && !x.fait ? ` <small style="color:var(--rouge)">· en retard</small>` : ""}</span>
-      ${/https?:\/\//.test(x.texte) ? `<button class="crayon" data-edit-btn="${x.id}" title="Modifier">✎</button>` : ""}
+      <span class="edit-ok" data-edit="${x.id}" onclick="editerDepuis(this, event)">${liens(x.texte)}${x.qui === "moi" && x.jour < aujL && !x.fait ? ` <small style="color:var(--rouge)">· en retard</small>` : ""}</span>
+      ${/https?:\/\//.test(x.texte) ? `<button class="crayon" data-edit="${x.id}" onclick="editerDepuis(this, event)" title="Modifier">✎</button>` : ""}
       <button data-suppr="${x.id}" title="Supprimer">×</button></div>`;
   const carte = (titre, l, vide) => `<div class="carte-t"><div class="ent"><b>${titre}</b><span>${l.length}</span></div>
       ${l.map(ligne).join("") || `<div class="vide-msg">${vide}</div>`}</div>`;
@@ -1406,18 +1408,25 @@ function rendreTodo() {
   // Édition dans un PETIT PANNEAU (préférence Miradj 18/11, remplace l'inline) :
   // on touche une ligne — tâche, idée, note ou lien — et tout le texte s'ouvre
   // dans une zone confortable, avec Sauvegarder / Annuler.
-  // Un seul composant pour TOUTES les listes : tâches, conseils, idées, notes, liens.
-  w.querySelectorAll(".tache span[data-edit]").forEach(sp => sp.onclick = ev => {
-    if (ev.target.tagName === "A") return;   // un lien reste un lien
-    const t = (D.taches || []).find(x => String(x.id) === sp.dataset.edit);
-    if (t) ouvrirEdition(t);
-  });
-  // Ligne dont le texte EST un lien cliquable : le crayon ✎ ouvre le même panneau.
-  w.querySelectorAll("button[data-edit-btn]").forEach(b => b.onclick = () => {
-    const t = (D.taches || []).find(x => String(x.id) === b.dataset.editBtn);
-    if (t) ouvrirEdition(t);
-  });
 }
+
+/* ── Déclenchement de l'édition — pensé pour l'iPhone ──
+   Un seul composant pour TOUTES les listes : tâches, conseils, idées, notes, liens.
+   Deux chemins vers le même panneau, car iOS est capricieux sur les taps :
+   1. onclick INLINE sur chaque ligne (le signal « cliquable » le plus fort pour iOS) ;
+   2. en filet, une délégation posée UNE SEULE fois sur la page To-do : elle survit
+      aux re-rendus de la liste (auto-refresh chaque minute) quoi qu'il arrive.
+   Le garde-fou #edit-fond évite d'ouvrir deux panneaux si les deux chemins tirent. */
+function editerDepuis(el, ev) {
+  if (ev && ev.target && ev.target.tagName === "A") return;   // un lien reste un lien
+  if (document.getElementById("edit-fond")) return;           // déjà ouvert
+  const t = (D && D.taches || []).find(x => String(x.id) === el.dataset.edit);
+  if (t) ouvrirEdition(t);
+}
+$("#page-todo").addEventListener("click", ev => {
+  const el = ev.target.closest("[data-edit]");
+  if (el) editerDepuis(el, ev);
+});
 
 /* Le panneau d'édition : glass, centré, tout le texte visible d'un coup. */
 function ouvrirEdition(t) {
