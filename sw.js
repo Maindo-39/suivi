@@ -1,7 +1,10 @@
 // Met l'application en cache pour qu'elle s'ouvre hors ligne.
 // Les DONNÉES ne sont jamais mises en cache : elles sont toujours
 // retéléchargées et déchiffrées à la volée.
-const CACHE = "suivi-v40";
+// ⚠️ Version : bumper ICI et dans index.html (const VERSION) dans le MÊME commit.
+// L'app affiche VERSION en pied de page et demande au service worker son CACHE :
+// si les deux divergent, l'écart s'affiche — on sait toujours ce qui tourne.
+const CACHE = "suivi-v41";
 const COQUILLE = ["./index.html", "./manifest.json", "./icone.png"];
 
 self.addEventListener("install", e => {
@@ -12,6 +15,11 @@ self.addEventListener("activate", e => {
   e.waitUntil(caches.keys()
     .then(k => Promise.all(k.filter(n => n !== CACHE).map(n => caches.delete(n))))
     .then(() => self.clients.claim()));
+});
+
+// L'app demande « version » : on répond avec le nom exact du cache qui tourne.
+self.addEventListener("message", e => {
+  if (e.data === "version" && e.source) e.source.postMessage({ version: CACHE });
 });
 
 self.addEventListener("fetch", e => {

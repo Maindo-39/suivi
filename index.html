@@ -167,6 +167,7 @@
   .tache span{flex:1;min-width:0;word-break:break-word}
   .tache.faite span{color:var(--tres-doux);text-decoration:line-through}
   .tache button{background:none;border:0;color:var(--tres-doux);font-size:20px;padding:0 4px}
+  .tache button.crayon{font-size:15px}   /* la ligne-lien : le crayon ouvre le panneau d'édition */
   .tache .qui{font-size:11px;font-weight:700;color:var(--accent);border:1px solid var(--accent);border-radius:6px;padding:1px 6px;flex:0 0 auto}
   .ajout{display:flex;gap:8px;margin-top:12px}
   .ajout input{flex:1;min-width:0;font-size:16px;padding:12px;border-radius:12px;border:1px solid var(--bord);background:var(--carte2);color:var(--texte)}
@@ -371,6 +372,7 @@
   footer{text-align:center;font-size:11px;color:var(--tres-doux);margin-top:22px;line-height:1.7}
   footer button{background:none;border:none;color:var(--tres-doux);
                 font-size:11px;text-decoration:underline;font-family:inherit}
+  footer .version{margin-top:8px;font-size:10.5px;color:var(--tres-doux);letter-spacing:.5px}
   /* ═══ Refonte visuelle 18/11 : thème clair/sombre, aération, équipe, édition directe, Face ID ═══ */
   .theme-btn{width:36px;height:36px;border-radius:12px;background:var(--carte);border:1px solid var(--bord);
              color:var(--doux);font-size:16px;display:grid;place-items:center;flex:none;font-family:inherit}
@@ -577,12 +579,17 @@
     Déchiffré sur cet appareil. Rien n'est envoyé nulle part.<br>
     <button id="btn-faceid" class="cache"></button><br>
     <button id="btn-oublier">Effacer mes accès de ce téléphone</button>
+    <div class="version" id="app-version"></div>
   </footer>
 </div>
 
 <script>
 "use strict";
 
+// ⚠️ Version affichée en pied de page. Bumper ICI et dans sw.js (const CACHE)
+// dans le MÊME commit. L'app vérifie auprès du service worker : s'il tourne
+// avec un autre cache, l'écart s'affiche à côté (ex. « v41 · sw v40 »).
+const VERSION = "v41";
 const DEPOT = "Maindo-39/mdjmotion";
 const CHEMIN = "data/data.enc";
 const ITER = 600000;
@@ -1364,6 +1371,7 @@ function rendreTodo() {
   const ligne = x => `<div class="tache ${x.fait ? "faite" : ""}">${x.qui === "moi" || x.qui === "claude"
       ? `<input type="checkbox" data-id="${x.id}" ${x.fait ? "checked" : ""}>` : `<span class="puce">${TYPES[x.qui][0]}</span>`}
       <span class="edit-ok" data-edit="${x.id}">${liens(x.texte)}${x.qui === "moi" && x.jour < aujL && !x.fait ? ` <small style="color:var(--rouge)">· en retard</small>` : ""}</span>
+      ${/https?:\/\//.test(x.texte) ? `<button class="crayon" data-edit-btn="${x.id}" title="Modifier">✎</button>` : ""}
       <button data-suppr="${x.id}" title="Supprimer">×</button></div>`;
   const carte = (titre, l, vide) => `<div class="carte-t"><div class="ent"><b>${titre}</b><span>${l.length}</span></div>
       ${l.map(ligne).join("") || `<div class="vide-msg">${vide}</div>`}</div>`;
@@ -1398,9 +1406,15 @@ function rendreTodo() {
   // Édition dans un PETIT PANNEAU (préférence Miradj 18/11, remplace l'inline) :
   // on touche une ligne — tâche, idée, note ou lien — et tout le texte s'ouvre
   // dans une zone confortable, avec Sauvegarder / Annuler.
+  // Un seul composant pour TOUTES les listes : tâches, conseils, idées, notes, liens.
   w.querySelectorAll(".tache span[data-edit]").forEach(sp => sp.onclick = ev => {
     if (ev.target.tagName === "A") return;   // un lien reste un lien
     const t = (D.taches || []).find(x => String(x.id) === sp.dataset.edit);
+    if (t) ouvrirEdition(t);
+  });
+  // Ligne dont le texte EST un lien cliquable : le crayon ✎ ouvre le même panneau.
+  w.querySelectorAll("button[data-edit-btn]").forEach(b => b.onclick = () => {
+    const t = (D.taches || []).find(x => String(x.id) === b.dataset.editBtn);
     if (t) ouvrirEdition(t);
   });
 }
@@ -1778,7 +1792,20 @@ function organiserPages() {
 }
 organiserPages();
 
-if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
+// Numéro de version, discret, en bas : ce que CE téléphone affiche vraiment.
+$("#app-version").textContent = "Suivi " + VERSION;
+if ("serviceWorker" in navigator) {
+  // updateViaCache:"none" : le téléphone va chercher le vrai sw.js, jamais une copie.
+  navigator.serviceWorker.register("sw.js", { updateViaCache: "none" }).catch(() => {});
+  // Contrôle croisé : le service worker dit avec quel cache il tourne.
+  navigator.serviceWorker.addEventListener("message", e => {
+    const v = e.data && e.data.version ? String(e.data.version).replace("suivi-", "") : "";
+    if (v) $("#app-version").textContent = "Suivi " + VERSION + (v === VERSION ? "" : " · sw " + v);
+  });
+  const demandeVersion = () => navigator.serviceWorker.controller && navigator.serviceWorker.controller.postMessage("version");
+  navigator.serviceWorker.ready.then(demandeVersion).catch(() => {});
+  navigator.serviceWorker.addEventListener("controllerchange", demandeVersion);
+}
 </script>
 </body>
 </html>
