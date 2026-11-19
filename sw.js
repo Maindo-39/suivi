@@ -4,7 +4,7 @@
 // ⚠️ Version : bumper ICI et dans index.html (const VERSION) dans le MÊME commit.
 // L'app affiche VERSION en pied de page et demande au service worker son CACHE :
 // si les deux divergent, l'écart s'affiche — on sait toujours ce qui tourne.
-const CACHE = "suivi-v44";
+const CACHE = "suivi-v45";
 const COQUILLE = ["./index.html", "./manifest.json", "./icone.png", "./icone-180.png", "./icone-192.png"];
 
 self.addEventListener("install", e => {
