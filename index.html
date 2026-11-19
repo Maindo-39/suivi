@@ -16,7 +16,7 @@
 <meta name="apple-mobile-web-app-title" content="Suivi">
 <meta name="robots" content="noindex,nofollow">
 <link rel="manifest" href="manifest.json">
-<link rel="apple-touch-icon" href="icone-180.png?v=46">
+<link rel="apple-touch-icon" href="icone-180.png?v=47">
 <title>Suivi</title>
 <style>
   /* ═══ Deux thèmes (18/11) : CLAIR par défaut (blanc/beige cassé + orange), sombre = noir + orange ═══ */
@@ -604,7 +604,7 @@
 // ⚠️ Version affichée en pied de page. Bumper ICI et dans sw.js (const CACHE)
 // dans le MÊME commit. L'app vérifie auprès du service worker : s'il tourne
 // avec un autre cache, l'écart s'affiche à côté (ex. « v41 · sw v40 »).
-const VERSION = "v46";
+const VERSION = "v47";
 const DEPOT = "Maindo-39/mdjmotion";
 const CHEMIN = "data/data.enc";
 const ITER = 600000;
@@ -1324,12 +1324,12 @@ function rendreAnalyse() {
     <div class="kpis">
       ${k("Bénéf · abonnements, Shopify, VA déduits", `<span style="color:${couleurNet(a.net)}">${signe(a.net)}</span>`, "sans THB", "large")}
       ${k("Chiffre d'affaires", eur(a.ca), `${a.n} commandes`)}
-      ${k("Pub", eur(a.spend), "Meta + Pinterest")}
+      ${k("Pub", eur(a.spend), "dépense pub")}
       ${k("ROAS", a.roas ? num(a.roas) : "—", `seuil ${a.be ? num(a.be) : "—"}`)}
       ${k("Marge", `<span class="${a.marge < 0 ? "m-non" : a.marge < 0.15 ? "m-moyen" : "m-ok"}">${pct(a.marge)}</span>`, "avant abonnements")}
     </div>
     <section><h2>💰 Bénéf par ${nomG}</h2>${grapheBarres(L.map(p => p.a.net), L.map(p => p.lab), couleurNet)}</section>
-    <section><h2>📊 CA et pub par ${nomG} <span>en $</span></h2>${grapheLignes([{ nom: "CA", c: "var(--accent)", v: L.map(p => p.a.ca), aire: true }, { nom: "Pub dépensée (Meta + Pinterest)", c: "var(--doux)", v: L.map(p => p.a.spend) }], L.map(p => p.lab))}</section>
+    <section><h2>📊 CA et pub par ${nomG} <span>en $</span></h2>${grapheLignes([{ nom: "CA", c: "var(--accent)", v: L.map(p => p.a.ca), aire: true }, { nom: "Pub dépensée", c: "var(--doux)", v: L.map(p => p.a.spend) }], L.map(p => p.lab))}</section>
     <section><h2>🎯 Marge par ${nomG}</h2>${grapheLignes([{ nom: "Marge", c: "var(--vert)", v: L.map(p => p.a.marge), aire: true }], L.map(p => p.lab),
       [{ v: D.seuils?.marge_ok ?? 0.15, c: "var(--accent)", nom: "bonne journée 15 %" }, { v: 0, c: "var(--rouge)", nom: "rentable 0 %" }], v => Math.round(v * 100) + " %")}</section>
     ${lances.some(x => x !== null) ? `<section><h2>🚀 Créas lancées par ${nomG}</h2>${grapheBarres(lances.map(x => x || 0), L.map(p => p.lab), () => "#ff7a00", v => String(v))}</section>` : ""}
