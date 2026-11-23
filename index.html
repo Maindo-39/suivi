@@ -436,6 +436,36 @@
   #verrou button.principal{margin-top:0}
   #verrou .autre{margin-top:16px;background:none;border:none;color:var(--doux);
                  font-size:13px;text-decoration:underline;font-family:inherit}
+
+  /* ═══ Toutes les boutiques (23/11) — une SECTION de l'écran Compta, pas un onglet de plus ═══ */
+  .bqm-seg{display:flex;gap:6px;margin-bottom:14px}
+  .bqm-seg button{flex:1;padding:8px 0;border-radius:11px;border:1px solid var(--bord);background:var(--carte2);
+    color:var(--doux);font-size:12.5px;font-weight:600;font-family:inherit}
+  .bqm-seg button.actif{border-color:var(--accent);color:var(--accent);background:var(--accent-fond)}
+  .bqm-gros{font-size:32px;font-weight:800;letter-spacing:-.8px;font-variant-numeric:tabular-nums;line-height:1.1}
+  .bqm-lib{font-size:11px;font-weight:700;color:var(--tres-doux);text-transform:uppercase;letter-spacing:.6px}
+  .bqm-sous{font-size:12px;color:var(--doux);margin-top:4px;line-height:1.5}
+  .bqm-pile{display:flex;height:8px;border-radius:999px;overflow:hidden;background:var(--carte2);margin:12px 0 6px}
+  .bqm-pile i{display:block;height:100%}
+  .bqm-leg{display:flex;gap:12px;flex-wrap:wrap;font-size:10.5px;color:var(--tres-doux);margin-bottom:12px}
+  .bqm-leg i{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:4px;vertical-align:-1px}
+  .bqm-b{border-top:1px solid var(--bord)}
+  .bqm-b summary{list-style:none;display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px 0;cursor:pointer}
+  .bqm-b summary::-webkit-details-marker{display:none}
+  .bqm-b summary .n{font-weight:700;font-size:14.5px}
+  .bqm-b summary small{display:block;color:var(--tres-doux);font-size:11px;font-weight:500;margin-top:1px}
+  .bqm-b summary b{font-size:16px;font-variant-numeric:tabular-nums;white-space:nowrap}
+  .bqm-b summary .fl{color:var(--tres-doux);font-size:12px;margin-left:6px;transition:transform .2s;display:inline-block}
+  .bqm-b[open] summary .fl{transform:rotate(90deg)}
+  .bqm-det{padding:0 0 10px}
+  .bqm-det .ligne{font-size:13px;padding:7px 0}
+  .bqm-src{font-size:10.5px;color:var(--tres-doux);line-height:1.5;margin-top:6px}
+  .bqm-glob{margin-top:6px;padding-top:6px;border-top:1px solid var(--bord)}
+  .bqm-glob .ligne{font-size:13.5px}
+  .bqm-net{font-size:16px;font-weight:800}
+  .bqm-mois{margin-top:10px;padding:12px 14px;border-radius:14px;background:var(--carte2);font-size:12.5px;color:var(--doux);line-height:1.5}
+  .bqm-mois .barre{height:8px;margin:8px 0;background:var(--bord)}
+  .bqm-glob .ligne .nom small{white-space:normal}
 </style>
 </head>
 <body>
@@ -582,6 +612,11 @@
     <div id="abos"></div>
   </section>
 
+  <section>
+    <h2>Toutes les boutiques <span id="bq-lib"></span></h2>
+    <div id="bq"></div>
+  </section>
+
 
 
 
@@ -604,7 +639,7 @@
 // ⚠️ Version affichée en pied de page. Bumper ICI et dans sw.js (const CACHE)
 // dans le MÊME commit. L'app vérifie auprès du service worker : s'il tourne
 // avec un autre cache, l'écart s'affiche à côté (ex. « v41 · sw v40 »).
-const VERSION = "v49";
+const VERSION = "v50";
 const DEPOT = "Maindo-39/mdjmotion";
 const CHEMIN = "data/data.enc";
 const ITER = 600000;
@@ -822,6 +857,7 @@ function rendre() {
   rendreProduits(datesAds);
   rendreDetail(a);
   rendreAbos();
+  rendreToutesBoutiques();
   rendreRemb(dates);
   rendreSemaine();
   rendreAnalyse();
@@ -1195,6 +1231,136 @@ function rendreAbos() {
   $("#abos").innerHTML = mens + hebdo +
     l("Salaire VA", "aux dates où tu la payes", 0).replace("$0.00", "réel") +
     `<div class="ligne"><div class="nom"><div class="t"><b>Total mensuel</b></div></div><div class="chiffres"><b>${eur2(totMens)}</b></div></div>`;
+}
+
+/* ═════════ Toutes les boutiques (23/11) : une section de l'écran Compta ═════════
+   Même calcul que Rise Studio (bloc recopié par rise-studio/app/partage/recopier.py).
+   Abonnements = compta/bareme.py (via le robot), THB 2 095 $ le 25. Jamais de projection
+   négative : le mois en cours montre le net à ce jour, puis « ce qu'il reste à faire ». */
+/* <<< BOUTIQUES CALCUL — recopié depuis rise-studio/app/partage/boutiques_calcul.js */
+/* ═══ Toutes les boutiques (23/11) — LE calcul, identique dans Rise Studio et dans l'app
+   mobile (source : rise-studio/app/partage/boutiques_calcul.js, recopiée telle quelle dans
+   les deux pages). Une seule vérité : tout vient du blob du robot (D.boutiques) —
+   boutiques, jours, pub par canal, abonnements lus dans compta/bareme.py, THB.
+   Bénéfice d'une boutique = CA − pub − coût fournisseur − frais de paiement
+   (la même « marge » que le tableau de bord). Abonnements et THB : au niveau global. ═══ */
+function bqAbosDuJour(iso) {
+  const A = (D.boutiques || {}).abos;
+  if (!A || iso < (A.debut || "")) return [];
+  const d = new Date(iso + "T12:00:00Z"), jm = d.getUTCDate(), wd = (d.getUTCDay() + 6) % 7;   // 0 = lundi
+  const out = (A.mensuels || []).filter(a => a.jour === jm).map(a => ({ nom: a.nom, montant: a.montant }));
+  for (const a of (A.hebdo || [])) if (a.jsem === wd) out.push({ nom: a.nom, montant: a.montant });
+  const f = (A.factures_shopify || {})[iso];
+  if (f != null) out.push({ nom: "Facture Shopify", montant: f });
+  return out;
+}
+function bqAujourdhui() { const t = toutesLesDates(); return t[t.length - 1] || new Date().toLocaleDateString("en-CA", { timeZone: "America/Chicago" }); }
+/* cle : "auj" | "7" | "mois" | "moisp" (mois dernier) */
+function bqPeriode(cle) {
+  const t = toutesLesDates(), auj = bqAujourdhui();
+  if (cle === "auj") return { dates: [auj], couts: [auj], lib: "aujourd'hui", mois: false, auj };
+  if (cle === "7") { const ds = t.slice(-7); return { dates: ds, couts: ds, lib: "7 derniers jours", mois: false, auj }; }
+  let ym = auj.slice(0, 7);
+  if (cle === "moisp") { const d = new Date(ym + "-15T12:00:00Z"); d.setUTCMonth(d.getUTCMonth() - 1); ym = d.toISOString().slice(0, 7); }
+  const fin = new Date(Date.UTC(+ym.slice(0, 4), +ym.slice(5, 7), 0)).getUTCDate();
+  const tous = Array.from({ length: fin }, (_, i) => ym + "-" + String(i + 1).padStart(2, "0"));
+  return { dates: tous.filter(x => x <= auj), couts: tous, lib: MOIS[+ym.slice(5, 7) - 1] + " " + ym.slice(0, 4),
+           mois: true, encours: ym === auj.slice(0, 7), ym, auj };
+}
+function bqBoutiques(dates) {
+  const B = D.boutiques || {};
+  return (B.liste || []).map(b => {
+    const r = { id: b.id, nom: b.nom, principale: !!b.principale, etat: b.etat || "pas branchée", devise: b.devise || null,
+                maj: b.maj || null, srcCa: b.ca || "", srcPub: b.pub || null, srcFourn: b.fournisseur || null,
+                ca: 0, n: 0, meta: 0, pin: 0, pub: 0, cogs: 0, frais: 0, remb: 0, sb: 0, nonReparti: 0 };
+    if (b.principale) {
+      for (const d of dates) {
+        const j = (D.jours || {})[d];
+        if (j) { r.ca += j.ca || 0; r.n += j.n || 0; r.cogs += j.cogs || 0; r.frais += j.frais || 0; r.remb += j.remb || 0; }
+        const sp = (D.spend || {})[d] || 0, c = (B.canaux || {})[d];
+        r.pub += sp;
+        if (c) { r.meta += c.meta || 0; r.pin += c.pin || 0; const ec = sp - (c.meta || 0) - (c.pin || 0); if (Math.abs(ec) > 0.01) r.nonReparti += ec; }
+        else r.nonReparti += sp;
+      }
+    } else {
+      const J = (B.jours || {})[b.id] || {};
+      for (const d of dates) { const j = J[d];
+        if (j) { r.ca += j.ca || 0; r.n += j.n || 0; r.frais += j.frais || 0; r.remb += j.remb || 0; r.sb += j.sb || 0; } }
+    }
+    r.horsUsd = !!(r.devise && r.devise !== "USD");   // jamais additionné sans conversion
+    r.benef = r.ca - r.pub - r.cogs - r.frais;
+    r.incomplet = r.sb > 0;                            // commandes sans barème : coût fournisseur NON inventé
+    r.vide = !r.n && !r.ca && !r.pub;
+    return r;
+  });
+}
+function bqGlobal(P) {
+  const S = bqBoutiques(P.dates), dedans = S.filter(s => !s.horsUsd && s.etat !== "pas branchée");
+  const T = { ca: 0, n: 0, meta: 0, pin: 0, pub: 0, cogs: 0, frais: 0, benef: 0, incomplet: false };
+  for (const s of dedans) { for (const k of ["ca", "n", "meta", "pin", "pub", "cogs", "frais", "benef"]) T[k] += s[k]; T.incomplet = T.incomplet || s.incomplet; }
+  const B = D.boutiques || {}, thbR = B.thb || null, aboOk = !!B.abos;
+  const abos = P.couts.flatMap(iso => bqAbosDuJour(iso).map(a => ({ ...a, iso, passe: iso <= P.auj })));
+  const thb = thbR ? P.couts.filter(iso => +iso.slice(8, 10) === thbR.jour).map(iso => ({ nom: "THB", montant: thbR.montant, iso, passe: iso <= P.auj })) : [];
+  const som = l => l.reduce((x, a) => x + a.montant, 0);
+  const abosPasses = som(abos.filter(a => a.passe)), abosAVenir = som(abos.filter(a => !a.passe));
+  const thbPasse = som(thb.filter(a => a.passe)), thbAVenir = som(thb.filter(a => !a.passe));
+  return { S, T, abos, thb, aboOk, abosPasses, abosAVenir, thbPasse, thbAVenir,
+           netAJour: T.benef - abosPasses - thbPasse,
+           aCouvrir: abosPasses + abosAVenir + thbPasse + thbAVenir,
+           netComplet: T.benef - abosPasses - abosAVenir - thbPasse - thbAVenir };
+}
+/* >>> BOUTIQUES CALCUL */
+let BQM = "mois";
+function rendreToutesBoutiques() {
+  const w = $("#bq"); if (!w) return;
+  if (!D || !D.boutiques) { $("#bq-lib").textContent = ""; w.innerHTML = `<div class="vide-msg">Pas encore servi par le robot — rien d'inventé.</div>`; return; }
+  const P = bqPeriode(BQM), G = bqGlobal(P), T = G.T;
+  $("#bq-lib").textContent = P.lib;
+  const coul = v => v < 0 ? "var(--rouge)" : "var(--vert)";
+  const lg = (l, v) => `<div class="ligne"><div class="nom"><div class="t">${l}</div></div><div class="chiffres"><b>${v}</b></div></div>`;
+  const pile = s => { const base = Math.max(s.ca, s.pub + s.cogs + s.frais, 1), p = v => (Math.max(v, 0) / base * 100).toFixed(2) + "%";
+    return `<div class="bqm-pile"><i style="width:${p(s.pub)};background:var(--accent)"></i><i style="width:${p(s.cogs)};background:#c9a27a"></i><i style="width:${p(s.frais)};background:var(--tres-doux)"></i><i style="width:${p(s.benef)};background:var(--vert)"></i></div>`; };
+  const etat = s => s.etat === "erreur" ? "lecture Shopify en panne" : s.etat === "pas branchée" ? "pas encore branchée"
+    : s.horsUsd ? "devise " + echap(s.devise) + " — pas additionnée" : s.vide ? "pas encore de ventes"
+    : `CA ${eur(s.ca)} · pub ${eur(s.pub)} · ${s.n} cmd${s.incomplet ? " · sans barème fournisseur" : ""}`;
+  const boutique = s => `<details class="bqm-b"><summary><div><div class="n">${echap(s.nom)}<span class="fl">›</span></div><small>${etat(s)}</small></div>
+      <b style="color:${s.vide ? "var(--texte)" : coul(s.benef)}">${eur(s.benef)}</b></summary>
+      <div class="bqm-det">
+        ${lg("Chiffre d'affaires", eur(s.ca))}
+        ${lg("Pub Meta", eur(s.srcPub ? s.meta : 0))}
+        ${lg("Pub Pinterest", eur(s.srcPub ? s.pin : 0))}
+        ${s.nonReparti > 0.01 ? lg("Pub non répartie", eur(s.nonReparti)) : ""}
+        ${lg("Fournisseur (agent)", s.incomplet ? s.sb + " cmd sans barème" : eur(s.cogs))}
+        ${lg("Frais de paiement", eur(s.frais))}
+        ${lg("<b>Bénéfice</b>" + (s.incomplet ? " <small>avant coût fournisseur</small>" : ""), `<span style="color:${coul(s.benef)}">${eur(s.benef)}</span>`)}
+        <div class="bqm-src">CA : ${echap(s.srcCa)} · Pub : ${s.srcPub ? echap(s.srcPub) : "aucun compte pub relié"} · Fournisseur : ${s.srcFourn ? echap(s.srcFourn) : "pas encore de barème, jamais estimé"}</div>
+      </div></details>`;
+  const passes = G.abos.filter(a => a.passe);
+  const thbL = G.thb.length ? (G.thbPasse ? eur(-G.thbPasse) : "à venir le " + ddmm(G.thb[0].iso)) : "—";
+  let fin = "";
+  if (G.aboOk && P.mois && P.encours) {
+    const couvert = G.aCouvrir ? Math.max(0, Math.min(1, T.benef / G.aCouvrir)) : 1;
+    fin = `<div class="bqm-mois">THB + tous les abonnements du mois : <b style="color:var(--texte)">${eur(G.aCouvrir)}</b>
+      <div class="barre"><div style="width:${(couvert * 100).toFixed(1)}%;height:100%;background:linear-gradient(90deg,#7c3aed,#a855f7)"></div></div>
+      ${G.netComplet >= 0 ? `Bénéfice net après THB et abonnements : <b style="color:var(--vert)">${eur(G.netComplet)}</b>`
+        : `Couvert à <b style="color:var(--texte)">${Math.round(couvert * 100)} %</b> — encore <b style="color:var(--texte)">${eur(G.aCouvrir - T.benef)}</b> de bénéfice pour tout couvrir.`}</div>`;
+  }
+  w.innerHTML = `
+    <div class="bqm-seg">${[["mois", "Ce mois"], ["moisp", "Mois dernier"]].map(([k, l]) => `<button data-bqm="${k}" class="${BQM === k ? "actif" : ""}">${l}</button>`).join("")}</div>
+    <div class="bqm-lib">Bénéfice des boutiques</div>
+    <div class="bqm-gros" style="color:${coul(T.benef)}">${eur(T.benef)}</div>
+    <div class="bqm-sous">CA ${eur(T.ca)} · pub ${eur(T.pub)} · fournisseur ${eur(T.cogs)} · frais ${eur(T.frais)}</div>
+    ${pile(T)}
+    <div class="bqm-leg"><span><i style="background:var(--accent)"></i>pub</span><span><i style="background:#c9a27a"></i>fournisseur</span><span><i style="background:var(--tres-doux)"></i>frais</span><span><i style="background:var(--vert)"></i>bénéfice</span></div>
+    ${G.S.map(boutique).join("")}
+    <div class="bqm-glob">
+      ${G.aboOk ? lg(`Abonnements prélevés <small>${echap([...new Set(passes.map(a => a.nom))].join(" · ") || "aucun")}</small>`, eur(-G.abosPasses)) : lg("Abonnements", "pas encore synchronisés")}
+      ${lg('<span style="color:#a855f7">●</span> THB ' + eur((D.boutiques.thb || {}).montant || 0) + " · le " + ((D.boutiques.thb || {}).jour || "—"), thbL)}
+      ${lg(P.mois && !P.encours ? "<b>Net après THB et abonnements</b>" : "<b>Net à ce jour</b>", G.aboOk ? `<span class="bqm-net" style="color:${coul(G.netAJour)}">${eur(G.netAJour)}</span>` : "—")}
+      ${fin}
+      <div class="bqm-src">Abonnements : compta/bareme.py. Saint Muse : CA Triple Whale, jamais l'attribution Meta. Romyrosia, Amysiaa : Shopify, toutes les 5 min.</div>
+    </div>`;
+  w.querySelectorAll("button[data-bqm]").forEach(b => b.onclick = () => { BQM = b.dataset.bqm; rendreToutesBoutiques(); });
 }
 
 /* ═════════ Outils communs ═════════ */
@@ -1885,7 +2051,8 @@ function organiserPages() {
   const pc = $("#page-compta"), pa = $("#page-ads"), pages = $("#pages");
   if (!pc || !pa) return;
   const sec = id => { const e = $("#" + id); return e ? e.closest("section") : null; };
-  [$("#alerte-remb"), $("#hero"), document.querySelector(".tuiles"),
+  // 23/11 : « Toutes les boutiques » juste sous les tuiles — une section, pas un onglet de plus
+  [$("#alerte-remb"), $("#hero"), document.querySelector(".tuiles"), sec("bq"),
    sec("graph"), sec("cal"), sec("detail"), sec("abos")].forEach(el => { if (el) pc.appendChild(el); });
   [sec("cal2"), sec("meta"), sec("ads"), sec("pays"), sec("produits")].forEach(el => { if (el) pa.appendChild(el); });
   const btns = $("#nav").querySelectorAll("button");
