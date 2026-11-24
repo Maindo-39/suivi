@@ -465,6 +465,13 @@
   .bqm-net{font-size:16px;font-weight:800}
   .bqm-mois{margin-top:10px;padding:12px 14px;border-radius:14px;background:var(--carte2);font-size:12.5px;color:var(--doux);line-height:1.5}
   .bqm-mois .barre{height:8px;margin:8px 0;background:var(--bord)}
+  /* 24/11 : « 🌐 All » dans le sélecteur de boutique = la vue Toutes les boutiques.
+     Saint Muse choisi → Compta = Saint Muse seul ; All → Compta = toutes les boutiques seules. */
+  body:not(.mode-all) #sec-bq{display:none}
+  body.mode-all #page-compta > :not(#sec-bq){display:none}
+  .note-all{display:none;margin:0 0 14px;padding:10px 14px;border-radius:14px;background:var(--accent-fond);
+    color:var(--doux);font-size:12.5px;line-height:1.45}
+  body.mode-all .note-all{display:block}
   .bqm-glob .ligne .nom small{white-space:normal}
 </style>
 </head>
@@ -495,7 +502,8 @@
 <div id="tableau" class="cache">
   <header>
     <select class="boutique" id="boutique" title="Boutique">
-      <option value="saintmuse">🛍️ Saint Muse</option>
+      <option value="all">🌐 All</option>
+      <option value="saintmuse" selected>🛍️ Saint Muse</option>
       <option value="amysiaa" disabled>Amysiaa · à brancher</option>
       <option value="romyrosia" disabled>Romyrosia · à brancher</option>
     </select>
@@ -639,7 +647,7 @@
 // ⚠️ Version affichée en pied de page. Bumper ICI et dans sw.js (const CACHE)
 // dans le MÊME commit. L'app vérifie auprès du service worker : s'il tourne
 // avec un autre cache, l'écart s'affiche à côté (ex. « v41 · sw v40 »).
-const VERSION = "v50";
+const VERSION = "v51";
 const DEPOT = "Maindo-39/mdjmotion";
 const CHEMIN = "data/data.enc";
 const ITER = 600000;
@@ -2055,18 +2063,43 @@ function organiserPages() {
   [$("#alerte-remb"), $("#hero"), document.querySelector(".tuiles"), sec("bq"),
    sec("graph"), sec("cal"), sec("detail"), sec("abos")].forEach(el => { if (el) pc.appendChild(el); });
   [sec("cal2"), sec("meta"), sec("ads"), sec("pays"), sec("produits")].forEach(el => { if (el) pa.appendChild(el); });
+  // 24/11 : la section « Toutes les boutiques » ne s'affiche que quand « 🌐 All » est choisi en haut
+  const sb = sec("bq"); if (sb) sb.id = "sec-bq";
+  // en mode All, Ads et Analyse restent des chiffres Saint Muse : on le dit, rien de mélangé
+  [pa, $("#page-analyse")].forEach(p => { if (p && !p.querySelector(".note-all")) {
+    const n = document.createElement("div"); n.className = "note-all";
+    n.textContent = "Ces chiffres = Saint Muse seulement. Toutes les boutiques : écran Compta.";
+    p.prepend(n); } });
   const btns = $("#nav").querySelectorAll("button");
   btns.forEach(b => b.onclick = () => { allerPage(+b.dataset.p); window.scrollTo({ top: 0 }); });
   const suivre = () => {
     const i = Math.round(pages.scrollLeft / (pages.clientWidth || 1));
     btns.forEach((b, k) => b.classList.toggle("actif", k === i));
-    $("#periodes").classList.toggle("cache", i > 1);   // les périodes ne servent qu'à Compta et Ads
-    $("#semaine").classList.toggle("cache", i > 1);
+    // les périodes ne servent qu'à Compta et Ads — et pas à Compta en mode All (la vue a son propre « Ce mois / Mois dernier »)
+    const sansPer = i > 1 || (i === 1 && document.body.classList.contains("mode-all"));
+    $("#periodes").classList.toggle("cache", sansPer);
+    $("#semaine").classList.toggle("cache", sansPer);
   };
+  window.suivrePages = suivre;
   pages.addEventListener("scroll", suivre); suivre();
   window.ouvrirTodo = () => requestAnimationFrame(() => { pages.style.scrollBehavior = "auto"; pages.scrollLeft = 2 * pages.clientWidth; pages.style.scrollBehavior = ""; suivre(); });
 }
 organiserPages();
+
+// 24/11 : sélecteur de boutique en haut — « 🌐 All » ouvre la vue Toutes les boutiques sur Compta.
+// Le choix est retenu sur CE téléphone (Saint Muse par défaut).
+function appliquerBoutique(v, aller) {
+  document.body.classList.toggle("mode-all", v === "all");
+  try { localStorage.setItem("boutique", v); } catch (e) {}
+  if (window.suivrePages) window.suivrePages();
+  if (aller) { allerPage(1); window.scrollTo({ top: 0 }); }
+}
+(() => {
+  const sel = $("#boutique"); if (!sel) return;
+  let v = "saintmuse"; try { v = localStorage.getItem("boutique") === "all" ? "all" : "saintmuse"; } catch (e) {}
+  sel.value = v; appliquerBoutique(v, false);
+  sel.onchange = () => appliquerBoutique(sel.value, true);
+})();
 
 // Numéro de version, discret, en bas : ce que CE téléphone affiche vraiment.
 $("#app-version").textContent = "Suivi " + VERSION;
