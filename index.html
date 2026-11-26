@@ -473,6 +473,25 @@
     color:var(--doux);font-size:12.5px;line-height:1.45}
   body.mode-all .note-all{display:block}
   .bqm-glob .ligne .nom small{white-space:normal}
+  /* 26/11 : calendrier de la vue All — le bénéfice du jour (toutes boutiques) dans chaque case */
+  .bqc-cal{gap:5px;margin-bottom:8px;grid-template-columns:repeat(7,minmax(0,1fr))}
+  .bqc-cal .case{aspect-ratio:auto;min-width:0}   /* les cases vides carrées élargissaient les colonnes */
+  .bqc-cal .case.bqc-c{border:0;padding:5px 0;font-family:inherit;aspect-ratio:auto;min-height:48px;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;
+    background:var(--carte2);color:var(--tres-doux)}
+  .bqc-cal .case.bqc-c b{font-size:12.5px;font-weight:700;color:var(--texte)}
+  .bqc-cal .case.bqc-c small{font-size:9.5px;font-weight:700;letter-spacing:-.3px;font-variant-numeric:tabular-nums;white-space:nowrap}
+  .bqc-cal .case.bqc-c.pos{background:var(--vert-fond);color:var(--vert)}
+  .bqc-cal .case.bqc-c.neg{background:var(--rouge-fond);color:var(--rouge)}
+  .bqc-cal .case.bqc-c.futur{opacity:.35;cursor:default}
+  .bqc-cal .case.bqc-c.ajd b{color:var(--accent)}
+  .bqc-cal .case.bqc-c.sel{box-shadow:inset 0 0 0 2px var(--accent)}
+  .bqc-cal .case.bqc-c.dans{box-shadow:inset 0 0 0 1px var(--accent)}
+  .bqc-cal .case.bqc-c{padding-bottom:9px}   /* place pour le trait rouge sous le montant */
+  .bqc-trait{display:inline-block;width:14px;height:3px;border-radius:2px;background:var(--rouge);vertical-align:middle;margin-right:2px}
+  .bqc-leg{font-size:11px;color:var(--tres-doux);margin:2px 0 14px;line-height:1.4}
+  .bqj{padding:14px;border-radius:16px;background:var(--carte2);margin-bottom:22px}
+  .bqm-mois-tete{font-size:13px;font-weight:800;margin:4px 0 10px}
 </style>
 </head>
 <body>
@@ -647,7 +666,7 @@
 // ⚠️ Version affichée en pied de page. Bumper ICI et dans sw.js (const CACHE)
 // dans le MÊME commit. L'app vérifie auprès du service worker : s'il tourne
 // avec un autre cache, l'écart s'affiche à côté (ex. « v41 · sw v40 »).
-const VERSION = "v51";
+const VERSION = "v52";
 const DEPOT = "Maindo-39/mdjmotion";
 const CHEMIN = "data/data.enc";
 const ITER = 600000;
@@ -1317,19 +1336,60 @@ function bqGlobal(P) {
            aCouvrir: abosPasses + abosAVenir + thbPasse + thbAVenir,
            netComplet: T.benef - abosPasses - abosAVenir - thbPasse - thbAVenir };
 }
+/* 26/11 (retour propriétaire) : le CALENDRIER de « toutes les boutiques » — mobile ET Rise
+   Studio. N'importe quel mois, n'importe quelle période choisie au calendrier, le bénéfice
+   de chaque jour, et le trait rouge (même règle que le calendrier Compta du mobile). */
+function bqPeriodeMois(ym) {   // comme bqPeriode("mois"), pour n'importe quel mois
+  const auj = bqAujourdhui();
+  const fin = new Date(Date.UTC(+ym.slice(0, 4), +ym.slice(5, 7), 0)).getUTCDate();
+  const tous = Array.from({ length: fin }, (_, i) => ym + "-" + String(i + 1).padStart(2, "0"));
+  return { dates: tous.filter(x => x <= auj), couts: tous, lib: MOIS[+ym.slice(5, 7) - 1] + " " + ym.slice(0, 4),
+           mois: true, encours: ym === auj.slice(0, 7), ym, auj };
+}
+function bqPeriodeDates(deb, fin) {   // un jour (deb = fin) ou une période du calendrier
+  const auj = bqAujourdhui(), per = [];
+  for (let x = deb; x <= fin && per.length < 400; x = plusJours(x, 1)) per.push(x);
+  const dl = iso => new Date(iso + "T12:00:00Z").toLocaleDateString("fr-FR", { day: "numeric", month: "long", timeZone: "UTC" });
+  return { dates: per.filter(x => x <= auj), couts: per, mois: false, auj, nbJours: per.length,
+           lib: per.length === 1 ? dl(deb) : "du " + dl(deb) + " au " + dl(fin) };
+}
+function bqJour(iso) {   // une case du calendrier
+  const auj = bqAujourdhui(), G = bqGlobal({ dates: [iso], couts: [iso], auj }), T = G.T;
+  const actif = !!(T.n || T.ca || T.pub);
+  // trait rouge : rentable avant les abonnements du jour, dans le rouge une fois retirés —
+  // jamais sur la journée en cours ; le THB n'y compte pas (comme le calendrier Compta)
+  return { T, G, actif, trait: actif && iso !== auj && T.benef >= 0 && T.benef - G.abosPasses < 0 };
+}
+function bqCourt(v) {   // montant compact pour une case : $312 · −$45 · $1,2k
+  const a = Math.abs(v);
+  return (v < 0 ? "−" : "") + "$" + (a >= 1000 ? (a / 1000).toFixed(a >= 10000 ? 0 : 1).replace(".", ",") + "k" : Math.round(a));
+}
 /* >>> BOUTIQUES CALCUL */
-let BQM = "mois";
+/* 26/11 (retour propriétaire : « je veux un calendrier, cliquer un jour et voir ce que j'ai fait
+   ce jour-là, en tout puis par boutique ») : la vue All = un CALENDRIER du mois (lundi en
+   premier, navigation libre), le bénéfice du jour de toutes les boutiques DANS chaque case,
+   un clic = le détail du jour ; en dessous, le bilan du mois affiché. Même calcul (bqGlobal). */
+// a = début, b = fin (null = un seul jour). Même geste que le calendrier Compta :
+// 1er appui = un jour, 2e = la fin de la période, 3e = on recommence (retour 26/11).
+let BQC = { ym: null, a: null, b: null };
+// bqPeriodeMois, bqPeriodeDates, bqJour, bqCourt : dans le calcul partagé (BOUTIQUES CALCUL)
 function rendreToutesBoutiques() {
   const w = $("#bq"); if (!w) return;
   if (!D || !D.boutiques) { $("#bq-lib").textContent = ""; w.innerHTML = `<div class="vide-msg">Pas encore servi par le robot — rien d'inventé.</div>`; return; }
-  const P = bqPeriode(BQM), G = bqGlobal(P), T = G.T;
+  const auj = bqAujourdhui(), t0 = toutesLesDates();
+  const premYm = (t0[0] || auj).slice(0, 7), dernYm = auj.slice(0, 7);
+  if (!BQC.ym) BQC.ym = dernYm;
+  // jour par défaut = aujourd'hui, « fermé » (b = a) : le 1er appui montre UN jour, pas une période
+  if (!BQC.a) { BQC.a = auj; BQC.b = auj; }
+  const deb = BQC.a, finP = BQC.b || BQC.a;
+  const P = bqPeriodeMois(BQC.ym), G = bqGlobal(P), T = G.T;
   $("#bq-lib").textContent = P.lib;
   const coul = v => v < 0 ? "var(--rouge)" : "var(--vert)";
   const lg = (l, v) => `<div class="ligne"><div class="nom"><div class="t">${l}</div></div><div class="chiffres"><b>${v}</b></div></div>`;
   const pile = s => { const base = Math.max(s.ca, s.pub + s.cogs + s.frais, 1), p = v => (Math.max(v, 0) / base * 100).toFixed(2) + "%";
     return `<div class="bqm-pile"><i style="width:${p(s.pub)};background:var(--accent)"></i><i style="width:${p(s.cogs)};background:#c9a27a"></i><i style="width:${p(s.frais)};background:var(--tres-doux)"></i><i style="width:${p(s.benef)};background:var(--vert)"></i></div>`; };
   const etat = s => s.etat === "erreur" ? "lecture Shopify en panne" : s.etat === "pas branchée" ? "pas encore branchée"
-    : s.horsUsd ? "devise " + echap(s.devise) + " — pas additionnée" : s.vide ? "pas encore de ventes"
+    : s.horsUsd ? "devise " + echap(s.devise) + " — pas additionnée" : s.vide ? (s.jour || "pas encore de ventes")
     : `CA ${eur(s.ca)} · pub ${eur(s.pub)} · ${s.n} cmd${s.incomplet ? " · sans barème fournisseur" : ""}`;
   const boutique = s => `<details class="bqm-b"><summary><div><div class="n">${echap(s.nom)}<span class="fl">›</span></div><small>${etat(s)}</small></div>
       <b style="color:${s.vide ? "var(--texte)" : coul(s.benef)}">${eur(s.benef)}</b></summary>
@@ -1353,8 +1413,52 @@ function rendreToutesBoutiques() {
       ${G.netComplet >= 0 ? `Bénéfice net après THB et abonnements : <b style="color:var(--vert)">${eur(G.netComplet)}</b>`
         : `Couvert à <b style="color:var(--texte)">${Math.round(couvert * 100)} %</b> — encore <b style="color:var(--texte)">${eur(G.aCouvrir - T.benef)}</b> de bénéfice pour tout couvrir.`}</div>`;
   }
+  // ── le calendrier : le bénéfice du jour (toutes boutiques) dans chaque case ──
+  const an = +BQC.ym.slice(0, 4), mo = +BQC.ym.slice(5, 7) - 1;
+  const decal = (new Date(Date.UTC(an, mo, 1)).getUTCDay() + 6) % 7;
+  const nbJ = new Date(Date.UTC(an, mo + 1, 0)).getUTCDate();
+  let cases = JSEM.map(j => `<div class="jsem">${j}</div>`).join("");
+  for (let i = 0; i < decal; i++) cases += `<div class="case vide"></div>`;
+  for (let d = 1; d <= nbJ; d++) {
+    const iso = BQC.ym + "-" + String(d).padStart(2, "0");
+    if (iso > auj) { cases += `<div class="case bqc-c futur"><b>${d}</b></div>`; continue; }
+    const J = bqJour(iso), Tj = J.T, actif = J.actif;
+    const cl = (actif ? (Tj.benef >= 0 ? "pos" : "neg") : "") + (iso === auj ? " ajd" : "")
+      + (iso === deb || iso === finP ? " sel" : iso > deb && iso < finP ? " dans" : "");
+    // trait rouge : même règle que le calendrier Compta (voir bqJour, calcul partagé)
+    const neg = J.trait ? '<span class="neg-dot"></span>' : "";
+    cases += `<button class="case bqc-c ${cl}" data-bqj="${iso}"><b>${d}</b>${actif ? `<small>${bqCourt(Tj.benef)}</small>` : ""}${neg}</button>`;
+  }
+  // ── le jour ou la période choisis : le total, le détail, puis chaque boutique ──
+  const P1 = bqPeriodeDates(deb, finP), unJour = P1.nbJours === 1;
+  const G1 = bqGlobal(P1), T1 = G1.T;
+  const actif1 = T1.n || T1.ca || T1.pub;
+  const nomJ = !unJour ? `${maj1(P1.lib)} (${P1.nbJours} jours)`
+    : deb === auj ? "Aujourd'hui"
+    : maj1(new Date(deb + "T12:00:00Z").toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long", timeZone: "UTC" }));
+  const nomsAbos = [...new Set(G1.abos.map(a => a.nom))].join(" · ");
+  const prelevL = (G1.abos.length ? lg(`Abonnements prélevés <small>${echap(nomsAbos)}</small>`, eur(-G1.abosPasses)) : "")
+    + (G1.thb.length ? lg('<span style="color:#a855f7">●</span> THB prélevé', eur(-G1.thbPasse)) : "");
+  const jour = `<div class="bqj" id="bqj">
+      <div class="bqm-lib">${nomJ} · toutes les boutiques</div>
+      ${actif1 ? `<div class="bqm-gros" style="color:${coul(T1.benef)}">${eur(T1.benef)}</div>
+      <div class="bqm-sous">CA ${eur(T1.ca)} · ${T1.n} commande${T1.n > 1 ? "s" : ""} · pub ${eur(T1.pub)} · fournisseur ${eur(T1.cogs)} · frais ${eur(T1.frais)}${T1.incomplet ? " · avant coût fournisseur des commandes sans barème" : ""}</div>
+      ${pile(T1)}` : `<div class="bqm-sous" style="margin:6px 0 10px">Aucune vente ni dépense pub ${unJour ? "ce jour-là" : "sur cette période"}.</div>`}
+      ${G1.S.map(s => boutique({ ...s, jour: unJour ? "rien ce jour-là" : "rien sur cette période" })).join("")}
+      ${prelevL ? `<div class="bqm-glob">${prelevL}
+        ${lg(`<b>Net ${unJour ? "du jour" : "de la période"}</b>`, `<span class="bqm-net" style="color:${coul(G1.netAJour)}">${eur(G1.netAJour)}</span>`)}</div>` : ""}
+    </div>`;
   w.innerHTML = `
-    <div class="bqm-seg">${[["mois", "Ce mois"], ["moisp", "Mois dernier"]].map(([k, l]) => `<button data-bqm="${k}" class="${BQM === k ? "actif" : ""}">${l}</button>`).join("")}</div>
+    <div class="cal-tete">
+      <button data-bqmois="-1" ${BQC.ym <= premYm ? "disabled" : ""} title="Mois précédent">‹</button>
+      <div class="mois">${maj1(P.lib)}</div>
+      <button data-bqmois="1" ${BQC.ym >= dernYm ? "disabled" : ""} title="Mois suivant">›</button>
+    </div>
+    <div class="cal bqc-cal">${cases}</div>
+    <div class="bqc-leg">Dans chaque case : le bénéfice du jour, toutes boutiques. Touche un jour pour le détail, puis un 2e pour une période.
+      <span class="bqc-trait"></span> = rentable, mais dans le rouge après les abonnements du jour.</div>
+    ${jour}
+    <div class="bqm-mois-tete">Le mois · ${P.lib}</div>
     <div class="bqm-lib">Bénéfice des boutiques</div>
     <div class="bqm-gros" style="color:${coul(T.benef)}">${eur(T.benef)}</div>
     <div class="bqm-sous">CA ${eur(T.ca)} · pub ${eur(T.pub)} · fournisseur ${eur(T.cogs)} · frais ${eur(T.frais)}</div>
@@ -1368,7 +1472,21 @@ function rendreToutesBoutiques() {
       ${fin}
       <div class="bqm-src">Abonnements : compta/bareme.py. Saint Muse : CA Triple Whale, jamais l'attribution Meta. Romyrosia, Amysiaa : Shopify, toutes les 5 min.</div>
     </div>`;
-  w.querySelectorAll("button[data-bqm]").forEach(b => b.onclick = () => { BQM = b.dataset.bqm; rendreToutesBoutiques(); });
+  w.querySelectorAll("button[data-bqmois]").forEach(b => b.onclick = () => {
+    const d = new Date(BQC.ym + "-15T12:00:00Z"); d.setUTCMonth(d.getUTCMonth() + +b.dataset.bqmois);
+    BQC.ym = d.toISOString().slice(0, 7);
+    // le jour affiché suit le mois : aujourd'hui pour le mois en cours, sinon son dernier jour
+    BQC.a = BQC.ym === dernYm ? auj : bqPeriodeMois(BQC.ym).couts.slice(-1)[0]; BQC.b = BQC.a;
+    rendreToutesBoutiques();
+  });
+  w.querySelectorAll("button[data-bqj]").forEach(b => b.onclick = () => {
+    const iso = b.dataset.bqj;   // même règle que choisir() du calendrier Compta
+    if (!BQC.a || BQC.b) { BQC.a = iso; BQC.b = null; }
+    else if (iso < BQC.a) { BQC.b = BQC.a; BQC.a = iso; }
+    else BQC.b = iso;
+    rendreToutesBoutiques();
+    const z = $("#bqj"); if (z) z.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  });
 }
 
 /* ═════════ Outils communs ═════════ */
@@ -1632,9 +1750,10 @@ function rendreTB() {
     && (x.jour === TBS.jour || (TBS.jour === aujL && x.qui === "moi" && x.jour < aujL && !x.fait)));
   const nomJ = TBS.jour === aujL ? "aujourd'hui"
     : JOURS3[new Date(TBS.jour + "T12:00:00Z").getUTCDay()] + " " + ddmm(TBS.jour);
+  // 26/11 (comme Rise Studio depuis le 20/11) : les 📌 rappels se COCHENT comme les tâches → barrés, pas supprimés
   const ligneJ = x => `<div class="tache ${x.fait ? "faite" : ""}">
-      ${x.qui === "rappel" ? `<span class="puce">📌</span>` : `<input type="checkbox" data-tbid="${x.id}" ${x.fait ? "checked" : ""}>`}
-      <span class="edit-ok" data-edit="${x.id}" onclick="editerDepuis(this, event)">${liens(x.texte)}${x.qui === "moi" && x.jour < aujL && !x.fait ? ` <small style="color:var(--rouge)">· en retard</small>` : ""}</span>
+      <input type="checkbox" data-tbid="${x.id}" ${x.fait ? "checked" : ""}>
+      <span class="edit-ok" data-edit="${x.id}" onclick="editerDepuis(this, event)">${x.qui === "rappel" ? "📌 " : ""}${liens(x.texte)}${x.qui === "moi" && x.jour < aujL && !x.fait ? ` <small style="color:var(--rouge)">· en retard</small>` : ""}</span>
       <button data-tbsuppr="${x.id}" title="Supprimer">×</button></div>`;
   w.innerHTML = `
     <div class="titre-page">Tableau de bord 🗓<small>tes tâches et tes 📌 rappels, posés sur le mois</small></div>
@@ -1647,7 +1766,7 @@ function rendreTB() {
       <div class="tb-cal">${cases}</div>
     </section>
     <div class="carte-t"><div class="ent"><b>${maj1(nomJ)}</b>
-        <span>${duJour.filter(x => !x.fait && x.qui === "moi").length} à faire · ${duJour.filter(x => x.qui === "rappel").length} rappel${duJour.filter(x => x.qui === "rappel").length > 1 ? "s" : ""}</span></div>
+        <span>${duJour.filter(x => !x.fait && x.qui === "moi").length} à faire · ${duJour.filter(x => x.qui === "rappel" && !x.fait).length} rappel${duJour.filter(x => x.qui === "rappel" && !x.fait).length > 1 ? "s" : ""}</span></div>
       ${duJour.map(ligneJ).join("") || `<div class="vide-msg">Rien pour ${nomJ}. Ajoute une tâche ou un rappel 👇</div>`}
       <div class="tb-bascule">
         <button data-tbt="moi" class="${TBS.type === "moi" ? "actif" : ""}">✅ Tâche</button>
