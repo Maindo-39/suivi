@@ -472,6 +472,11 @@
   .note-all{display:none;margin:0 0 14px;padding:10px 14px;border-radius:14px;background:var(--accent-fond);
     color:var(--doux);font-size:12.5px;line-height:1.45}
   body.mode-all .note-all{display:block}
+  /* 27/11 : Romyrosia / Amysiaa choisie en haut → Compta = SON tableau de bord seul (comme Rise Studio) */
+  body:not(.mode-bout) #sec-bout{display:none}
+  body.mode-bout #page-compta > :not(#sec-bout){display:none}
+  body.mode-bout .note-all{display:block}
+  .bqc-cal .case.bqc-c.act{background:var(--accent-fond);color:var(--accent)}
   .bqm-glob .ligne .nom small{white-space:normal}
   /* 26/11 : calendrier de la vue All — le bénéfice du jour (toutes boutiques) dans chaque case */
   .bqc-cal{gap:5px;margin-bottom:8px;grid-template-columns:repeat(7,minmax(0,1fr))}
@@ -523,8 +528,8 @@
     <select class="boutique" id="boutique" title="Boutique">
       <option value="all">🌐 All</option>
       <option value="saintmuse" selected>🛍️ Saint Muse</option>
-      <option value="amysiaa" disabled>Amysiaa · à brancher</option>
-      <option value="romyrosia" disabled>Romyrosia · à brancher</option>
+      <option value="amysiaa">🛍️ Amysiaa</option>
+      <option value="romyrosia">🛍️ Romyrosia</option>
     </select>
     <div class="tete-d">
       <div class="maj" id="maj"></div>
@@ -666,7 +671,7 @@
 // ⚠️ Version affichée en pied de page. Bumper ICI et dans sw.js (const CACHE)
 // dans le MÊME commit. L'app vérifie auprès du service worker : s'il tourne
 // avec un autre cache, l'écart s'affiche à côté (ex. « v41 · sw v40 »).
-const VERSION = "v52";
+const VERSION = "v53";
 const DEPOT = "Maindo-39/mdjmotion";
 const CHEMIN = "data/data.enc";
 const ITER = 600000;
@@ -885,6 +890,7 @@ function rendre() {
   rendreDetail(a);
   rendreAbos();
   rendreToutesBoutiques();
+  rendreBoutiqueSeule();   // 27/11 : Romyrosia / Amysiaa (si choisie en haut)
   rendreRemb(dates);
   rendreSemaine();
   rendreAnalyse();
@@ -1298,7 +1304,7 @@ function bqBoutiques(dates) {
   const B = D.boutiques || {};
   return (B.liste || []).map(b => {
     const r = { id: b.id, nom: b.nom, principale: !!b.principale, etat: b.etat || "pas branchée", devise: b.devise || null,
-                maj: b.maj || null, srcCa: b.ca || "", srcPub: b.pub || null, srcFourn: b.fournisseur || null,
+                maj: b.maj || null, srcCa: b.ca || "", srcPub: b.pub || b.pubTf || null, srcFourn: b.fournisseur || null,
                 ca: 0, n: 0, meta: 0, pin: 0, pub: 0, cogs: 0, frais: 0, remb: 0, sb: 0, nonReparti: 0 };
     if (b.principale) {
       for (const d of dates) {
@@ -1312,7 +1318,9 @@ function bqBoutiques(dates) {
     } else {
       const J = (B.jours || {})[b.id] || {};
       for (const d of dates) { const j = J[d];
-        if (j) { r.ca += j.ca || 0; r.n += j.n || 0; r.frais += j.frais || 0; r.remb += j.remb || 0; r.sb += j.sb || 0; } }
+        if (j) { r.ca += j.ca || 0; r.n += j.n || 0; r.frais += j.frais || 0; r.remb += j.remb || 0; r.sb += j.sb || 0;
+                 // 26/11 : la pub lue par Triple Free (robot : champs pin / meta du jour)
+                 r.pin += j.pin || 0; r.meta += j.meta || 0; r.pub += (j.pin || 0) + (j.meta || 0); } }
     }
     r.horsUsd = !!(r.devise && r.devise !== "USD");   // jamais additionné sans conversion
     r.benef = r.ca - r.pub - r.cogs - r.frais;
@@ -1363,6 +1371,20 @@ function bqJour(iso) {   // une case du calendrier
 function bqCourt(v) {   // montant compact pour une case : $312 · −$45 · $1,2k
   const a = Math.abs(v);
   return (v < 0 ? "−" : "") + "$" + (a >= 1000 ? (a / 1000).toFixed(a >= 10000 ? 0 : 1).replace(".", ",") + "k" : Math.round(a));
+}
+/* 27/11 : une boutique SANS barème fournisseur (Romyrosia, Amysiaa) — son tableau de bord, mobile
+   ET Rise Studio. CA, commandes, frais, pub lue — JAMAIS de marge ni de verdict « rentable »
+   (le coût fournisseur n'est pas connu, on ne l'invente pas). */
+function aggBoutique(J, dates) {
+  const a = { ca: 0, n: 0, frais: 0, remb: 0, pin: 0, meta: 0 };
+  for (const d of dates) { const j = J[d]; if (!j) continue;
+    a.ca += j.ca || 0; a.n += j.n || 0; a.frais += j.frais || 0; a.remb += j.remb || 0;
+    a.pin += j.pin || 0; a.meta += j.meta || 0; }
+  a.pub = a.pin + a.meta;
+  a.fraisInconnus = a.ca > 0 && a.frais === 0;   // la caisse maison encaisse hors Shopify : 0 $ remonté ≠ 0 $ payé
+  a.reste = a.ca - a.pub - a.frais;
+  a.roas = a.pub ? a.ca / a.pub : 0;
+  return a;
 }
 /* >>> BOUTIQUES CALCUL */
 /* 26/11 (retour propriétaire : « je veux un calendrier, cliquer un jour et voir ce que j'ai fait
@@ -1486,6 +1508,88 @@ function rendreToutesBoutiques() {
     else BQC.b = iso;
     rendreToutesBoutiques();
     const z = $("#bqj"); if (z) z.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  });
+}
+
+/* 27/11 (retour propriétaire : « sur le téléphone, Romyrosia est marquée à brancher, ouvre-la ») :
+   Romyrosia ou Amysiaa choisie en haut = SON tableau de bord sur l'écran Compta — le même que
+   Rise Studio (aggBoutique, calcul partagé) : CA Shopify, commandes, pub lue, ROAS, calendrier
+   jour / période. Jamais de bénéfice ni de vert / rouge : son coût fournisseur n'est pas connu. */
+var BOUT_SEL = "saintmuse";
+let BS = { id: null, ym: null, a: null, b: null };
+function rendreBoutiqueSeule() {
+  const w = $("#bout"); if (!w || BOUT_SEL === "saintmuse" || BOUT_SEL === "all") return;
+  const B = ((((D || {}).boutiques) || {}).liste || []).find(x => x.id === BOUT_SEL);
+  $("#bout-nom").textContent = B ? B.nom : BOUT_SEL;
+  if (!B) { $("#bout-lib").textContent = ""; w.innerHTML = `<div class="vide-msg">Pas encore servie par le robot — rien d'inventé.</div>`; return; }
+  if (BS.id !== B.id) BS = { id: B.id, ym: null, a: null, b: null };
+  const J = ((D.boutiques || {}).jours || {})[B.id] || {};
+  const auj = bqAujourdhui(), t0 = toutesLesDates();
+  const premYm = (t0[0] || auj).slice(0, 7), dernYm = auj.slice(0, 7);
+  if (!BS.ym) BS.ym = dernYm;
+  if (!BS.a) { BS.a = auj; BS.b = auj; }
+  const deb = BS.a, finP = BS.b || BS.a;
+  const pinB = !!B.pubTf;
+  const lg = (l, v) => `<div class="ligne"><div class="nom"><div class="t">${l}</div></div><div class="chiffres"><b>${v}</b></div></div>`;
+  const pasConnu = `<span style="color:var(--tres-doux)">pas encore connu</span>`;
+  const lignes = a => `
+    ${lg("Chiffre d'affaires <small>Shopify, payé, remboursements déduits</small>", eur(a.ca))}
+    ${lg("Commandes", a.n + (a.n ? ` <small style="display:inline;color:var(--tres-doux)">· panier ${eur(a.ca / a.n)}</small>` : ""))}
+    ${lg("Pub Pinterest", pinB ? eur(a.pin) : `<span style="color:var(--tres-doux)">pas branchée</span>`)}
+    ${lg("Pub Meta", `<span style="color:var(--tres-doux)">pas branchée</span>`)}
+    ${lg("Frais de paiement", a.fraisInconnus ? `<span style="color:var(--tres-doux)">pas connus</span>` : eur(a.frais))}
+    ${lg("Coût fournisseur <small>pas de barème : jamais estimé</small>", pasConnu)}
+    ${lg(`Après pub${a.fraisInconnus ? "" : " et frais"} <small>avant coût fournisseur — ce n'est pas un bénéfice</small>`, eur(a.reste))}
+    ${lg("ROAS <small>CA ÷ pub lue</small>", a.pub ? num(a.roas) : "—")}`;
+  // ── le calendrier : le CA du jour dans chaque case (orange = ventes ou pub ce jour-là) ──
+  const an = +BS.ym.slice(0, 4), mo = +BS.ym.slice(5, 7) - 1;
+  let cases = JSEM.map(j => `<div class="jsem">${j}</div>`).join("")
+    + `<div class="case vide"></div>`.repeat((new Date(Date.UTC(an, mo, 1)).getUTCDay() + 6) % 7);
+  for (let d = 1, nbJ = new Date(Date.UTC(an, mo + 1, 0)).getUTCDate(); d <= nbJ; d++) {
+    const iso = BS.ym + "-" + String(d).padStart(2, "0");
+    if (iso > auj) { cases += `<div class="case bqc-c futur"><b>${d}</b></div>`; continue; }
+    const jd = J[iso] || {}, act = jd.n || jd.ca || jd.pin;
+    const cl = (act ? "act" : "") + (iso === auj ? " ajd" : "") + (iso === deb || iso === finP ? " sel" : iso > deb && iso < finP ? " dans" : "");
+    cases += `<button class="case bqc-c ${cl}" data-bsj="${iso}"><b>${d}</b>${act ? `<small>${bqCourt(jd.ca || 0)}</small>` : ""}</button>`;
+  }
+  // ── le jour ou la période choisis ──
+  const P1 = bqPeriodeDates(deb, finP), a1 = aggBoutique(J, P1.dates), un = P1.nbJours === 1;
+  const nomJ = !un ? `${maj1(P1.lib)} (${P1.nbJours} jours)` : deb === auj ? "Aujourd'hui"
+    : maj1(new Date(deb + "T12:00:00Z").toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long", timeZone: "UTC" }));
+  const Pm = bqPeriodeMois(BS.ym), am = aggBoutique(J, Pm.dates);
+  $("#bout-lib").textContent = Pm.lib;
+  w.innerHTML = `
+    <div class="cal-tete">
+      <button data-bsmois="-1" ${BS.ym <= premYm ? "disabled" : ""} title="Mois précédent">‹</button>
+      <div class="mois">${maj1(Pm.lib)}</div>
+      <button data-bsmois="1" ${BS.ym >= dernYm ? "disabled" : ""} title="Mois suivant">›</button>
+    </div>
+    <div class="cal bqc-cal">${cases}</div>
+    <div class="bqc-leg">Dans chaque case : le CA du jour. Touche un jour pour le détail, puis un 2e pour une période.
+      Pas de vert / rouge : le coût fournisseur de ${echap(B.nom)} n'est pas encore connu.</div>
+    <div class="bqj" id="bsj">
+      <div class="bqm-lib">${nomJ} · ${echap(B.nom)}</div>
+      <div class="bqm-gros" style="color:var(--texte)">${eur(a1.ca)}</div>
+      <div class="bqm-sous">${a1.n} commande${a1.n > 1 ? "s" : ""} · pub ${pinB ? eur(a1.pub) : "pas branchée"} · ROAS ${a1.pub ? num(a1.roas) : "—"}</div>
+      ${lignes(a1)}
+    </div>
+    <div class="bqm-mois-tete">Le mois · ${Pm.lib}</div>
+    ${lignes(am)}
+    <div class="bqm-src">${echap(B.nom)} : CA, commandes et frais lus sur Shopify toutes les 5 minutes (payées, hors test) ·
+      pub : ${pinB ? echap(B.pubTf) : "aucun compte pub relié"} · journées de Houston. Abonnements et THB : au global, dans « 🌐 All ».</div>`;
+  w.querySelectorAll("button[data-bsmois]").forEach(b => b.onclick = () => {
+    const d = new Date(BS.ym + "-15T12:00:00Z"); d.setUTCMonth(d.getUTCMonth() + +b.dataset.bsmois);
+    BS.ym = d.toISOString().slice(0, 7);
+    BS.a = BS.ym === dernYm ? auj : bqPeriodeMois(BS.ym).couts.slice(-1)[0]; BS.b = BS.a;
+    rendreBoutiqueSeule();
+  });
+  w.querySelectorAll("button[data-bsj]").forEach(b => b.onclick = () => {
+    const iso = b.dataset.bsj;   // même règle que les calendriers Compta et All
+    if (!BS.a || BS.b) { BS.a = iso; BS.b = null; }
+    else if (iso < BS.a) { BS.b = BS.a; BS.a = iso; }
+    else BS.b = iso;
+    rendreBoutiqueSeule();
+    const z = $("#bsj"); if (z) z.scrollIntoView({ behavior: "smooth", block: "nearest" });
   });
 }
 
@@ -2184,10 +2288,13 @@ function organiserPages() {
   [sec("cal2"), sec("meta"), sec("ads"), sec("pays"), sec("produits")].forEach(el => { if (el) pa.appendChild(el); });
   // 24/11 : la section « Toutes les boutiques » ne s'affiche que quand « 🌐 All » est choisi en haut
   const sb = sec("bq"); if (sb) sb.id = "sec-bq";
+  // 27/11 : le tableau de bord d'une autre boutique (Romyrosia, Amysiaa) — une section de Compta
+  if (!$("#sec-bout")) { const s2 = document.createElement("section"); s2.id = "sec-bout";
+    s2.innerHTML = `<h2><span id="bout-nom">Boutique</span> <span id="bout-lib"></span></h2><div id="bout"></div>`; pc.appendChild(s2); }
   // en mode All, Ads et Analyse restent des chiffres Saint Muse : on le dit, rien de mélangé
   [pa, $("#page-analyse")].forEach(p => { if (p && !p.querySelector(".note-all")) {
     const n = document.createElement("div"); n.className = "note-all";
-    n.textContent = "Ces chiffres = Saint Muse seulement. Toutes les boutiques : écran Compta.";
+    n.textContent = "Ces chiffres = Saint Muse seulement. La boutique choisie en haut : écran Compta.";
     p.prepend(n); } });
   const btns = $("#nav").querySelectorAll("button");
   btns.forEach(b => b.onclick = () => { allerPage(+b.dataset.p); window.scrollTo({ top: 0 }); });
@@ -2195,7 +2302,7 @@ function organiserPages() {
     const i = Math.round(pages.scrollLeft / (pages.clientWidth || 1));
     btns.forEach((b, k) => b.classList.toggle("actif", k === i));
     // les périodes ne servent qu'à Compta et Ads — et pas à Compta en mode All (la vue a son propre « Ce mois / Mois dernier »)
-    const sansPer = i > 1 || (i === 1 && document.body.classList.contains("mode-all"));
+    const sansPer = i > 1 || (i === 1 && (document.body.classList.contains("mode-all") || document.body.classList.contains("mode-bout")));
     $("#periodes").classList.toggle("cache", sansPer);
     $("#semaine").classList.toggle("cache", sansPer);
   };
@@ -2207,15 +2314,20 @@ organiserPages();
 
 // 24/11 : sélecteur de boutique en haut — « 🌐 All » ouvre la vue Toutes les boutiques sur Compta.
 // Le choix est retenu sur CE téléphone (Saint Muse par défaut).
+// 27/11 : Romyrosia / Amysiaa aussi (leur tableau de bord sur Compta, comme Rise Studio).
+const BOUT_AUTRES = ["amysiaa", "romyrosia"];
 function appliquerBoutique(v, aller) {
   document.body.classList.toggle("mode-all", v === "all");
+  document.body.classList.toggle("mode-bout", BOUT_AUTRES.includes(v));
+  BOUT_SEL = v;
   try { localStorage.setItem("boutique", v); } catch (e) {}
+  if (D && BOUT_AUTRES.includes(v)) rendreBoutiqueSeule();
   if (window.suivrePages) window.suivrePages();
   if (aller) { allerPage(1); window.scrollTo({ top: 0 }); }
 }
 (() => {
   const sel = $("#boutique"); if (!sel) return;
-  let v = "saintmuse"; try { v = localStorage.getItem("boutique") === "all" ? "all" : "saintmuse"; } catch (e) {}
+  let v = "saintmuse"; try { const m = localStorage.getItem("boutique"); v = m === "all" || BOUT_AUTRES.includes(m) ? m : "saintmuse"; } catch (e) {}
   sel.value = v; appliquerBoutique(v, false);
   sel.onchange = () => appliquerBoutique(sel.value, true);
 })();
